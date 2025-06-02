@@ -1,0 +1,57 @@
+.env
+.env.*
+!.env.example  # 예시 파일만 남겨두기
+
+node_modules/
+build/
+dist/
+dist-ssr/
+out/
+.next/
+.cache/
+
+coverage/
+*.lcov
+
+# ----------------------------------------
+#  GitHub Actions (워크플로우 중 생길 수 있는 것)
+.github/workflows/*.log
+.github/workflows/.DS_Store
+.github/.cache/
+
+# ----------------------------------------
+#  로그 및 디버그
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ----------------------------------------
+# IDE & OS
+.vscode/
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ----------------------------------------
+#  보안 관련
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+
+# ----------------------------------------
+# Docker (있을 경우)
+Dockerfile.dev
+docker-compose.override.yml
+*.local
