@@ -7,7 +7,7 @@ interface LayoutWrapperProps {
     headerTitle?: string;
     hideHeader?: boolean;
     showBackButton?: boolean;
-}
+}//ㅇㄹㅇㄹ
 
 const LayoutWrapper = ({
                            children,
