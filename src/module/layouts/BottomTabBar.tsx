@@ -9,7 +9,7 @@ const BottomTabBar = () => {
     const [value, setValue] = useState(0);
     const navigate = useNavigate();
 
-    // 커밋용
+    // 커밋용sdf
     return (
         <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }} elevation={3}>
             <BottomNavigation
