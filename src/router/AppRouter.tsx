@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import NoticeListPage from '../pages/NoticeListPage';
 import Home from '../pages/Home';
 import LayoutWrapper from "../module/layouts/LayoutWrapper.tsx";
+import AuctionPage from "../pages/auction";
 
 
 const AppRouter = () => {
@@ -20,6 +21,14 @@ const AppRouter = () => {
                 element={
                     <LayoutWrapper headerTitle="공지사항" showBackButton>
                         <NoticeListPage />
+                    </LayoutWrapper>
+                }
+            />
+            <Route
+                path="/auction"
+                element={
+                    <LayoutWrapper headerTitle="경매" showBackButton>
+                        <AuctionPage />
                     </LayoutWrapper>
                 }
             />

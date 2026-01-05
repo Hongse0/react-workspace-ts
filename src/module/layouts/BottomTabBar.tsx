@@ -18,7 +18,7 @@ const BottomTabBar = () => {
                     setValue(newValue);
                     if (newValue === 0) navigate('/');
                     else if (newValue === 1) navigate('/notice');
-                    else if (newValue === 2) navigate('/mypage');
+                    else if (newValue === 2) navigate('/auction');
                 }}
                 showLabels
             >
