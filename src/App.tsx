@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import AppRouter from './router/AppRouter';
 import BottomTabBar from './module/layouts/BottomTabBar';
 import {useAuthStore} from "./store/auto/useAuthStore.ts";
-import { CssBaseline } from '@mui/material';
+import {Box, CssBaseline} from '@mui/material';
 
 const queryClient = new QueryClient();
 
@@ -14,8 +14,11 @@ function App() {
         <QueryClientProvider client={queryClient}>
             <BrowserRouter>
                 <CssBaseline />
-                <AppRouter />
-                {isAuthed && <BottomTabBar />}
+                <Box sx={{ pb: 10 }}>
+                    <AppRouter />
+                </Box>
+                 {isAuthed && <BottomTabBar />}
+                {/*<BottomTabBar />*/}
             </BrowserRouter>
         </QueryClientProvider>
     );
