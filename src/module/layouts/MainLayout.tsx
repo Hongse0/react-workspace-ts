@@ -1,19 +1,15 @@
+// MainLayout.tsx
+import { Outlet } from 'react-router-dom';
 import { Box } from '@mui/material';
-import type { ReactNode } from 'react';
+import BottomTabBar from './BottomTabBar';
 
-const MainLayout = ({ children, hasTopBar = true }: { children: ReactNode; hasTopBar?: boolean }) => {
+export default function MainLayout() {
     return (
-        <Box
-            sx={{
-                paddingTop: hasTopBar ? '56px' : 0,
-                paddingBottom: '64px',
-                minHeight: '100vh',
-                boxSizing: 'border-box',
-            }}
-        >
-            {children}
-        </Box>
+        <>
+            <Box sx={{ pb: 10, minHeight: '100dvh' }}>
+                <Outlet />
+            </Box>
+            <BottomTabBar />
+        </>
     );
-};
-
-export default MainLayout;
+}
