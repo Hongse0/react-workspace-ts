@@ -36,13 +36,11 @@ class BaseAPIService {
         data?: RequestData,
         headers?: HttpHeaders,
     ) {
-        return this.instance.post<ResponseData, ServerResponse<Response, RequestData>, RequestData>(
-            url,
-            data,
-            {
-                headers,
-            },
-        );
+        return this.instance.post<
+            ResponseData,
+            ServerResponse<ResponseData, RequestData>,
+            RequestData
+        >(url, data, { headers });
     }
     protected put<ResponseData, RequestData>(url: string, data?: RequestData, headers?: HttpHeaders) {
         return this.instance.put<Response, ServerResponse<ResponseData, RequestData>, RequestData>(

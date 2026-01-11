@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import MainLayout from '../module/layouts/MainLayout';
 import LoginPage from "../pages/login";
+import Home from "../pages/search/Home"
 
 export default function AppRouter() {
     return (
@@ -11,7 +12,7 @@ export default function AppRouter() {
 
             <Route element={<ProtectedRoute />}>
                 <Route element={<MainLayout />}>
-                    <Route path="/" element={<LoginPage />} />
+                    <Route path="/" element={<Home />} />
                     <Route path="/market" element={<LoginPage />} />
                     <Route path="/account" element={<LoginPage />} />
                     <Route path="/settings" element={<LoginPage />} />

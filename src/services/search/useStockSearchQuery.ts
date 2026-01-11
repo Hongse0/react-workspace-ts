@@ -9,7 +9,7 @@ export const useStockSearchQuery = (params: { q: string; size?: number }) => {
 
     return useQuery({
         queryKey: ["stockSearch", q, params.size ?? 20],
-        enabled: q.length > 0, // ✅ q 없으면 호출 안 함
+        enabled: q.length > 0,
         queryFn: async () => {
             const {
                 data: { code, result, messages },

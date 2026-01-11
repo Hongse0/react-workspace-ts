@@ -1,4 +1,3 @@
-// MainLayout.tsx
 import { Outlet } from 'react-router-dom';
 import { Box } from '@mui/material';
 import BottomTabBar from './BottomTabBar';

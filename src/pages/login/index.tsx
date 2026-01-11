@@ -5,6 +5,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { styled } from '@mui/material/styles';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/auto/useAuthStore.ts';
+import {useLoginMutation} from "../../services/cms/useAuthQuery.ts";
 
 const Page = styled(Box)({
     minHeight: '100vh',
@@ -105,6 +106,9 @@ type LocationState = {
 };
 
 const LoginPage = () => {
+
+    const { mutateAsync: loginMutateAsync, isPending } = useLoginMutation();
+
     const navigate = useNavigate();
     const location = useLocation();
     const login = useAuthStore((s) => s.login);
@@ -114,8 +118,8 @@ const LoginPage = () => {
     const [error, setError] = useState<string | null>(null);
 
     const canSubmit = useMemo(() => {
-        return email.trim().length > 0 && pw.trim().length > 0;
-    }, [email, pw]);
+        return email.trim().length > 0 && pw.trim().length > 0 && !isPending;
+    }, [email, pw, isPending]);
 
     const onSubmit = async () => {
         setError(null);
@@ -127,13 +131,21 @@ const LoginPage = () => {
             return;
         }
 
-        // TODO: 실제 로그인 API 연동 시 accessToken 넣기
-        const fakeToken = 'fake-access-token';
-        login(fakeToken);
+        try {
+            const result = await loginMutateAsync({
+                email: email.trim(),
+                password: pw,
+            });
+            login(result.accessToken);
 
-        const state = (location.state as LocationState) ?? {};
-        navigate(state.from ?? '/', { replace: true });
+            const state = (location.state as LocationState) ?? {};
+            navigate(state.from ?? '/', { replace: true });
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : '로그인에 실패했습니다.';
+            setError(message);
+        }
     };
+
 
     return (
         <Page>
