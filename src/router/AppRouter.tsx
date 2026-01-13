@@ -3,6 +3,7 @@ import ProtectedRoute from './ProtectedRoute';
 import MainLayout from '../module/layouts/MainLayout';
 import LoginPage from "../pages/login";
 import Home from "../pages/search/Home"
+import AccountPage from "../pages/account"
 
 export default function AppRouter() {
     return (
@@ -14,7 +15,7 @@ export default function AppRouter() {
                 <Route element={<MainLayout />}>
                     <Route path="/" element={<Home />} />
                     <Route path="/market" element={<LoginPage />} />
-                    <Route path="/account" element={<LoginPage />} />
+                    <Route path="/account" element={<AccountPage />} />
                     <Route path="/settings" element={<LoginPage />} />
                 </Route>
             </Route>

@@ -57,6 +57,8 @@ const Nav = styled(BottomNavigation)(() => ({
     backgroundColor: COLORS.bg,
 }));
 
+const GRADIENT = 'linear-gradient(90deg, #4E7BFF 0%, #9A56FF 100%)';
+
 const Tab = styled(BottomNavigationAction)(() => ({
     position: 'relative',
     minWidth: 0,
@@ -82,10 +84,11 @@ const Tab = styled(BottomNavigationAction)(() => ({
         top: 6,
         left: '50%',
         transform: 'translateX(-50%)',
-        width: DIM.indicatorWidth,
-        height: DIM.indicatorHeight,
+        width: 48,
+        height: 4,
         borderRadius: 999,
-        backgroundColor: COLORS.selected,
+        background: GRADIENT,
+        boxShadow: '0 6px 14px rgba(122, 107, 255, 0.35)', // 살짝 광택 느낌
     },
 }));
 
