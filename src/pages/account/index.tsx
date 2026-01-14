@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Container, Stack } from '@mui/material';
 import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
@@ -17,12 +18,31 @@ import {
     AddFirstButton,
     AddFirstButtonHover,
 } from './AccountPage.styles';
+import AddAccountDialog from "../../components/account/AddAccountDialog.tsx";
+
 
 export default function AccountPage() {
     const totalBalance = 0;
 
+    const [openAdd, setOpenAdd] = useState(false);
+
     const handleAddFirstAccount = () => {
-        console.log('add first account');
+        setOpenAdd(true);
+    };
+
+    const handleCloseAdd = () => {
+        setOpenAdd(false);
+    };
+
+    const handleCreateAccount = async (payload: {
+        brokerage: string;
+        name: string;
+        accountNumber: string;
+        initialBalance: number;
+    }) => {
+        console.log('CREATE ACCOUNT =>', payload);
+
+        setOpenAdd(false);
     };
 
     return (
@@ -62,6 +82,12 @@ export default function AccountPage() {
                     </EmptyWrap>
                 </Container>
             </Body>
+
+            <AddAccountDialog
+                open={openAdd}
+                onClose={handleCloseAdd}
+                onCreate={handleCreateAccount}
+            />
         </Page>
     );
 }
