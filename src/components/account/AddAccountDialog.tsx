@@ -1,4 +1,4 @@
-import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import {
     Box,
     Button,
@@ -7,19 +7,21 @@ import {
     DialogTitle,
     IconButton,
     Stack,
-} from '@mui/material';
-import { useMemo, useState } from 'react';
-import type {BrokerageAccountCreate} from "./types.ts";
-import AccountForm, {type AccountFormValues} from "./AccountForm.tsx";
+} from "@mui/material";
+import { useMemo, useState } from "react";
+
+import AccountForm, { type AccountFormValues } from "./AccountForm";
+import { useCreateAccountMutation } from "../../services/account/useCreateAccount"; // 경로 확인
 
 type Props = {
     open: boolean;
     onClose: () => void;
-    onCreate: (payload: BrokerageAccountCreate) => Promise<void> | void;
+    onSuccess?: () => void;
 };
 
-export default function AddAccountDialog({ open, onClose, onCreate }: Props) {
+export default function AddAccountDialog({ open, onClose, onSuccess }: Props) {
     const [submitting, setSubmitting] = useState(false);
+    const { mutateAsync } = useCreateAccountMutation();
 
     const paperSx = useMemo(
         () => ({
@@ -28,13 +30,13 @@ export default function AddAccountDialog({ open, onClose, onCreate }: Props) {
             borderBottomLeftRadius: 0,
             borderBottomRightRadius: 0,
             m: 0,
-            position: 'fixed',
+            position: "fixed",
             left: 0,
             right: 0,
             bottom: 0,
-            width: '100%',
+            width: "100%",
             maxWidth: 560,
-            mx: 'auto',
+            mx: "auto",
         }),
         []
     );
@@ -42,15 +44,15 @@ export default function AddAccountDialog({ open, onClose, onCreate }: Props) {
     const handleSubmit = async (values: AccountFormValues) => {
         try {
             setSubmitting(true);
-
-            const payload: BrokerageAccountCreate = {
-                brokerage: values.brokerage.trim(),
-                name: values.name.trim(),
+            await mutateAsync({
+                brokerName: values.brokerage.trim(),
+                accountName: values.name.trim(),
                 accountNumber: values.accountNumber.trim(),
+                baseCurrency: "KRW",
                 initialBalance: values.initialBalance,
-            };
+            });
 
-            await onCreate(payload);
+            onSuccess?.();
             onClose();
         } finally {
             setSubmitting(false);
@@ -66,24 +68,22 @@ export default function AddAccountDialog({ open, onClose, onCreate }: Props) {
         >
             <DialogTitle
                 sx={{
-                    textAlign: 'center',
+                    textAlign: "center",
                     fontWeight: 800,
                     py: 1.0,
-
-                    position: 'sticky',
+                    position: "sticky",
                     top: 0,
                     zIndex: 2,
-                    backgroundColor: 'background.paper',
-
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
+                    backgroundColor: "background.paper",
+                    borderBottom: "1px solid",
+                    borderColor: "divider",
                 }}
             >
                 계좌 추가
                 <IconButton
                     onClick={onClose}
                     disabled={submitting}
-                    sx={{ position: 'absolute', right: 10, top: 10 }}
+                    sx={{ position: "absolute", right: 10, top: 10 }}
                     aria-label="close"
                 >
                     <CloseRoundedIcon />
@@ -114,14 +114,16 @@ export default function AddAccountDialog({ open, onClose, onCreate }: Props) {
                                 sx={{
                                     height: 48,
                                     borderRadius: 3,
-                                    background: 'linear-gradient(135deg, #4E7BFF 0%, #9B4DFF 100%)',
+                                    background:
+                                        "linear-gradient(135deg, #4E7BFF 0%, #9B4DFF 100%)",
                                 }}
                             >
-                                추가
+                                {submitting ? "등록 중..." : "추가"}
                             </Button>
                         </Stack>
                     )}
                 />
+
                 <Box sx={{ height: 10 }} />
             </DialogContent>
         </Dialog>

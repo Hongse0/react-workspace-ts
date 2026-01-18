@@ -1,5 +1,5 @@
-import { Stack, TextField } from '@mui/material';
-import {type FormEvent, type ReactNode, useMemo, useState} from 'react';
+import { Stack, TextField } from "@mui/material";
+import { type FormEvent, type ReactNode, useMemo, useState } from "react";
 
 export type AccountFormValues = {
     brokerage: string;
@@ -14,28 +14,28 @@ type Props = {
     renderActions: (args: { canSubmit: boolean }) => ReactNode;
 };
 
-const onlyNumberAndDash = (v: string) => v.replace(/[^0-9-]/g, '');
+const onlyNumberAndDash = (v: string) => v.replace(/[^0-9-]/g, "");
 
 export default function AccountForm({ disabled, onSubmit, renderActions }: Props) {
     const [values, setValues] = useState<AccountFormValues>({
-        brokerage: '',
-        name: '',
-        accountNumber: '',
+        brokerage: "",
+        name: "",
+        accountNumber: "",
         initialBalance: 0,
     });
 
     const errors = useMemo(() => {
         const e: Partial<Record<keyof AccountFormValues, string>> = {};
 
-        if (!values.brokerage.trim()) e.brokerage = '증권사를 입력해 주세요';
-        if (!values.name.trim()) e.name = '계좌명을 입력해 주세요';
+        if (!values.brokerage.trim()) e.brokerage = "증권사를 입력해 주세요";
+        if (!values.name.trim()) e.name = "계좌명을 입력해 주세요";
 
         const acc = values.accountNumber.trim();
-        if (!acc) e.accountNumber = '계좌번호를 입력해 주세요';
-        else if (acc.replace(/-/g, '').length < 8) e.accountNumber = '계좌번호가 너무 짧아요';
+        if (!acc) e.accountNumber = "계좌번호를 입력해 주세요";
+        else if (acc.replace(/-/g, "").length < 8) e.accountNumber = "계좌번호가 너무 짧아요";
 
         if (Number.isNaN(values.initialBalance) || values.initialBalance < 0) {
-            e.initialBalance = '0 이상 숫자만 가능해요';
+            e.initialBalance = "0 이상 숫자만 가능해요";
         }
 
         return e;
@@ -43,25 +43,20 @@ export default function AccountForm({ disabled, onSubmit, renderActions }: Props
 
     const canSubmit = useMemo(() => Object.keys(errors).length === 0, [errors]);
 
-    const handleSubmit = (e: FormEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         if (!canSubmit || disabled) return;
-        onSubmit(values);
+        await onSubmit(values);
     };
 
     const scrollIntoViewOnFocus = (e: React.FocusEvent<HTMLInputElement>) => {
         setTimeout(() => {
-            e.target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            e.target.scrollIntoView({ block: "center", behavior: "smooth" });
         }, 150);
     };
 
     return (
-        <form
-            onSubmit={handleSubmit}
-            style={{
-                paddingTop: 12,
-            }}
-        >
+        <form onSubmit={handleSubmit} style={{ paddingTop: 12 }}>
             <Stack spacing={2}>
                 <Stack spacing={0.8}>
                     <TextField
@@ -99,7 +94,7 @@ export default function AccountForm({ disabled, onSubmit, renderActions }: Props
                     error={!!errors.accountNumber}
                     helperText={errors.accountNumber}
                     fullWidth
-                    inputProps={{ inputMode: 'numeric' }}
+                    inputProps={{ inputMode: "numeric" }}
                 />
 
                 <TextField
@@ -107,15 +102,15 @@ export default function AccountForm({ disabled, onSubmit, renderActions }: Props
                     placeholder="0"
                     value={String(values.initialBalance)}
                     onChange={(e) => {
-                        const raw = e.target.value.replace(/[^0-9]/g, '');
-                        const num = raw === '' ? 0 : Number(raw);
+                        const raw = e.target.value.replace(/[^0-9]/g, "");
+                        const num = raw === "" ? 0 : Number(raw);
                         setValues((p) => ({ ...p, initialBalance: num }));
                     }}
                     disabled={disabled}
                     error={!!errors.initialBalance}
                     helperText={errors.initialBalance}
                     fullWidth
-                    inputProps={{ inputMode: 'numeric' }}
+                    inputProps={{ inputMode: "numeric" }}
                 />
 
                 {renderActions({ canSubmit })}
