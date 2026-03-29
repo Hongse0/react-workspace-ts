@@ -5,6 +5,11 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
 import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import { useNavigate } from "react-router-dom";
+
+import TradeFunnelDialog from "../../components/trade/TradeFunnelDialog";
+import type { TradeDraft } from "../../components/trade/TradeFunnelDialog";
 
 import {
     Page,
@@ -36,7 +41,17 @@ import {
 
 import AddAccountDialog from "../../components/account/AddAccountDialog";
 import { useAccountListQuery } from "../../services/account/useAccountListQuery";
-import {useDeleteAccountMutation} from "../../services/account/useDeleteAccountMutation.ts";
+import { useDeleteAccountMutation } from "../../services/account/useDeleteAccountMutation.ts";
+import { useAuthStore } from "../../store/auto/useAuthStore";
+import {useLogoutMutation} from "../../services/cms/useAuthQuery.ts";
+
+type Account = {
+    accountId: number;
+    accountName?: string | null;
+    brokerName?: string | null;
+    accountNumber?: string | null;
+    cashBalance?: string | number | null;
+};
 
 const toNumber = (v: string | number | null | undefined) => {
     if (v == null) return 0;
@@ -49,22 +64,73 @@ export default function AccountPage() {
     const [openAdd, setOpenAdd] = useState(false);
 
     const { data: accounts = [], isLoading, isError, error } = useAccountListQuery();
+    const typedAccounts = accounts as Account[];
 
     const totalBalance = useMemo(() => {
-        return accounts.reduce((sum, a) => sum + toNumber(a.cashBalance), 0);
-    }, [accounts]);
+        return typedAccounts.reduce((sum, a) => sum + toNumber(a.cashBalance), 0);
+    }, [typedAccounts]);
 
     const handleAddFirstAccount = () => setOpenAdd(true);
     const handleCloseAdd = () => setOpenAdd(false);
 
-    const { mutate: deleteAccount} = useDeleteAccountMutation();
+    const { mutate: deleteAccount } = useDeleteAccountMutation();
+
+    const [openTrade, setOpenTrade] = useState(false);
+    const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+
+    const navigate = useNavigate();
+    const logout = useAuthStore((s) => s.logout);
+    const { mutateAsync: logoutMutateAsync } = useLogoutMutation();
+
+    const handleLogout = async () => {
+        const ok = window.confirm("로그아웃 하시겠습니까?");
+        if (!ok) return;
+
+        try {
+            await logoutMutateAsync();
+        } catch (e) {
+            console.error(e);
+        } finally {
+            logout();
+            navigate("/login", { replace: true });
+        }
+    };
+
+    const openTradeForAccount = (a: Account) => {
+        setSelectedAccount(a);
+        setOpenTrade(true);
+    };
+
+    const closeTrade = () => setOpenTrade(false);
+
+    const handleSubmitTrade = (draft: TradeDraft) => {
+        console.log("trade submit", draft);
+    };
 
     return (
         <Page>
             <Header>
                 <HeaderGlow />
                 <Container maxWidth="sm" disableGutters>
-                    <HeaderTitle>증권 계좌 관리</HeaderTitle>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                        <HeaderTitle sx={{ mb: 0 }}>증권 계좌 관리</HeaderTitle>
+
+                        <DeleteButton
+                            onClick={handleLogout}
+                            sx={{
+                                width: 42,
+                                height: 42,
+                                borderRadius: "12px",
+                                bgcolor: "rgba(255,255,255,0.18)",
+                                color: "#fff",
+                                "&:hover": {
+                                    bgcolor: "rgba(255,255,255,0.28)",
+                                },
+                            }}
+                        >
+                            <LogoutRoundedIcon />
+                        </DeleteButton>
+                    </Box>
 
                     <TotalCard elevation={0}>
                         <TotalLabel>총 잔액</TotalLabel>
@@ -85,7 +151,7 @@ export default function AccountPage() {
                                 {error instanceof Error ? error.message : "오류가 발생했습니다."}
                             </Typography>
                         </Box>
-                    ) : accounts.length === 0 ? (
+                    ) : typedAccounts.length === 0 ? (
                         <EmptyWrap>
                             <Stack spacing={2.2} alignItems="center">
                                 <EmptyIconCircle>
@@ -107,8 +173,13 @@ export default function AccountPage() {
                     ) : (
                         <AccountListWrap>
                             <Stack spacing={2}>
-                                {accounts.map((a) => (
-                                    <AccountCard key={a.accountId} elevation={0}>
+                                {typedAccounts.map((a) => (
+                                    <AccountCard
+                                        key={a.accountId}
+                                        elevation={0}
+                                        onClick={() => openTradeForAccount(a)}
+                                        sx={{ cursor: "pointer" }}
+                                    >
                                         <AccountCardContent>
                                             <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                                                 <Box>
@@ -120,7 +191,8 @@ export default function AccountPage() {
                                                 <DeleteButton
                                                     size="small"
                                                     aria-label="delete"
-                                                    onClick={() => {
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
                                                         const ok = window.confirm("이 계좌를 삭제할까요?");
                                                         if (!ok) return;
                                                         deleteAccount(a.accountId);
@@ -136,7 +208,10 @@ export default function AccountPage() {
                                                 <DepositButton
                                                     variant="contained"
                                                     startIcon={<ArrowDownwardRoundedIcon />}
-                                                    onClick={() => console.log("deposit", a.accountId)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        console.log("deposit", a.accountId);
+                                                    }}
                                                 >
                                                     입금
                                                 </DepositButton>
@@ -144,7 +219,10 @@ export default function AccountPage() {
                                                 <WithdrawButton
                                                     variant="contained"
                                                     startIcon={<ArrowUpwardRoundedIcon />}
-                                                    onClick={() => console.log("withdraw", a.accountId)}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        console.log("withdraw", a.accountId);
+                                                    }}
                                                 >
                                                     출금
                                                 </WithdrawButton>
@@ -163,6 +241,13 @@ export default function AccountPage() {
             </FloatingAddFab>
 
             <AddAccountDialog open={openAdd} onClose={handleCloseAdd} />
+
+            <TradeFunnelDialog
+                open={openTrade}
+                onClose={closeTrade}
+                account={selectedAccount}
+                onSubmit={handleSubmitTrade}
+            />
         </Page>
     );
 }

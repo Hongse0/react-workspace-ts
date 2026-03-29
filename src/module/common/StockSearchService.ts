@@ -1,34 +1,45 @@
-import BaseAPIService from "../../module/api/BaseAPIService";
-import type { ServerResponse } from "../api/Types.ts";
+import BaseAPIService from "../api/BaseAPIService";
+import type { ServerResponse } from "../api/Types";
 
 export interface StockSearchItem {
-    srtnCd: string;   // A005930
-    itmsNm: string;   // 삼성전자
-    mrktCtg: string;  // KOSPI
-    activeYn?: string;
+    srtnCd: string;
+    isinCd: string;
+    mrktCtg: string;
+    itmsNm: string;
+    corpNm: string;
+    activeYn: string;
+    basDt: string;
 }
 
 export interface StockSearchResult {
+    query: string;
+    size: number;
+    total: number;
     items: StockSearchItem[];
 }
 
+export type StockSearchResponse = StockSearchResult;
+
 export interface StockSearchV1 {
-    searchStocks(params: { q: string; size?: number }): Promise<ServerResponse<StockSearchResult>>;
-    suggestStocks(params: { q: string; size?: number }): Promise<ServerResponse<StockSearchResult>>;
+    autocomplete(q: string, size?: number): Promise<ServerResponse<StockSearchResponse>>;
+    getBySrtnCd(srtnCd: string): Promise<ServerResponse<StockSearchItem>>;
 }
 
 export class StockSearchService extends BaseAPIService implements StockSearchV1 {
-    constructor(baseUrl: string, token?: string) {
-        super(baseUrl, "v1", "search", token);
+    constructor(baseUrl: string) {
+        super(baseUrl, "v1", "stocks/search");
     }
 
-    /** 주식 검색 (동의어/오타 허용) */
-    searchStocks(params: { q: string; size?: number }): Promise<ServerResponse<StockSearchResult>> {
-        return this.get<StockSearchResult>("/stocks", params);
+    /** 자동완성: GET /v1/stocks/search/autocomplete?q=삼성&size=10 */
+    autocomplete(q: string, size = 10) {
+        return this.get<StockSearchResponse>("/autocomplete", {
+            q,
+            size,
+        });
     }
 
-    /** 자동완성 */
-    suggestStocks(params: { q: string; size?: number }): Promise<ServerResponse<StockSearchResult>> {
-        return this.get<StockSearchResult>("/stocks/suggest", params);
+    /** 단축코드 단건조회: GET /v1/stocks/search/A005930 */
+    getBySrtnCd(srtnCd: string) {
+        return this.get<StockSearchItem>(`/${srtnCd}`);
     }
 }

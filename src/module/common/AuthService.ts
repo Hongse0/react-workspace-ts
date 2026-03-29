@@ -13,24 +13,19 @@ export type LoginResult = {
 
 export interface AuthV1 {
     login(body: LoginRequest): Promise<ServerResponse<LoginResult, LoginRequest>>;
+    logout(): Promise<ServerResponse<void, unknown>>;
 }
 
 export class AuthService extends BaseAPIService implements AuthV1 {
-    constructor(baseUrl: string, token?: string) {
-        // BaseAPIService(baseUrl, version, domain, token)
-        // => /v1/cms/auth/xxx
-        super(baseUrl, "v1", "cms", token);
+    constructor(baseUrl: string) {
+        super(baseUrl, "v1", "cms");
     }
 
     login(body: LoginRequest): Promise<ServerResponse<LoginResult, LoginRequest>> {
         return this.post<LoginResult, LoginRequest>("/auth/login", body);
     }
 
-    // signup(body: SignupRequest): Promise<ServerResponse<void>> {
-    //   return this.post<void>("/auth/signup", body);
-    // }
-
-    // logout(): Promise<ServerResponse<void>> {
-    //   return this.post<void>("/auth/logout");
-    // }
+    logout(): Promise<ServerResponse<void, unknown>> {
+        return this.post<void, undefined>("/auth/logout");
+    }
 }
