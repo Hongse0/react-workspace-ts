@@ -27,3 +27,20 @@ export const useLoginMutation = () => {
         },
     });
 };
+
+export const useLogoutMutation = () => {
+    return useMutation({
+        mutationKey: ['auth', 'logout'],
+        mutationFn: async (): Promise<void> => {
+            const {
+                data: { code, messages },
+            } = await authService.logout();
+
+            if (code !== '000000') {
+                const msg = messages?.[0] ?? '로그아웃에 실패했습니다.';
+                console.error(`${code}: ${msg}`);
+                throw new Error(msg);
+            }
+        },
+    });
+};

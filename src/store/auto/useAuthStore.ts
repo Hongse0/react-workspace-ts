@@ -10,24 +10,58 @@ type AuthState = {
     logout: () => void;
 };
 
+const isTokenExpired = (token: string | null) => {
+    if (!token) return true;
+
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.exp * 1000 < Date.now();
+    } catch {
+        return true;
+    }
+};
+
 export const useAuthStore = create<AuthState>()(
     persist(
         (set) => ({
             isAuthed: false,
             accessToken: null,
-
             hasHydrated: false,
+
             setHasHydrated: (v) => set({ hasHydrated: v }),
 
-            login: (token) => set({ isAuthed: true, accessToken: token }),
-            logout: () => set({ isAuthed: false, accessToken: null }),
+            login: (token) =>
+                set({
+                    isAuthed: true,
+                    accessToken: token,
+                }),
+
+            logout: () =>
+                set({
+                    isAuthed: false,
+                    accessToken: null,
+                }),
         }),
         {
             name: 'auth-store',
             storage: createJSONStorage(() => localStorage),
-            partialize: (s) => ({ isAuthed: s.isAuthed, accessToken: s.accessToken }),
+
+            partialize: (s) => ({
+                accessToken: s.accessToken,
+            }),
+
             onRehydrateStorage: () => (state) => {
-                state?.setHasHydrated(true);
+                if (!state) return;
+
+                const expired = isTokenExpired(state.accessToken);
+
+                if (expired) {
+                    state.logout();
+                } else {
+                    state.login(state.accessToken!);
+                }
+
+                state.setHasHydrated(true);
             },
         }
     )
