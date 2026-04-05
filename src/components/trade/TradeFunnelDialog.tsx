@@ -60,8 +60,12 @@ type Props = {
         brokerName?: string | null;
         accountNumber?: string | null;
         cashBalance?: string | number | null;
+        stockAssetValue?: string | number | null;
+        totalAssetValue?: string | number | null;
+        holdingCount?: number | null;
     } | null;
-    onSubmit?: (draft: TradeDraft) => void;
+    onSubmit?: (draft: TradeDraft) => Promise<void> | void;
+    initialSide?: TradeType;
 };
 
 const todayISO = () => {
@@ -170,9 +174,16 @@ function SelectCard({
     );
 }
 
-export default function TradeFunnelDialog({ open, onClose, account, onSubmit }: Props) {
+export default function TradeFunnelDialog({
+                                              open,
+                                              onClose,
+                                              account,
+                                              onSubmit,
+                                              initialSide = "BUY",
+                                          }: Props) {
     const totalSteps = 4;
     const [step, setStep] = useState(0);
+    const [submitting, setSubmitting] = useState(false);
 
     const [type, setType] = useState<TradeType>("BUY");
     const [market, setMarket] = useState<Market>("KR");
@@ -199,7 +210,7 @@ export default function TradeFunnelDialog({ open, onClose, account, onSubmit }: 
         if (!open) return;
 
         setStep(0);
-        setType("BUY");
+        setType(initialSide);
         setMarket("KR");
         setSymbolName("");
         setSymbolCode("");
@@ -208,7 +219,7 @@ export default function TradeFunnelDialog({ open, onClose, account, onSubmit }: 
         setTradeDate(todayISO());
         setMemo("");
         setSelectedKrStock(null);
-    }, [open]);
+    }, [open, initialSide]);
 
     const canNext = useMemo(() => {
         if (step === 0) return !!type && !!account;
@@ -235,7 +246,7 @@ export default function TradeFunnelDialog({ open, onClose, account, onSubmit }: 
 
     const handlePrev = () => setStep((s) => Math.max(s - 1, 0));
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!account) return;
 
         const draft: TradeDraft = {
@@ -252,8 +263,12 @@ export default function TradeFunnelDialog({ open, onClose, account, onSubmit }: 
             memo: memo.trim(),
         };
 
-        onSubmit?.(draft);
-        onClose();
+        try {
+            setSubmitting(true);
+            await onSubmit?.(draft);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -274,6 +289,7 @@ export default function TradeFunnelDialog({ open, onClose, account, onSubmit }: 
                 <Box sx={{ position: "relative", px: 3, pt: 3, pb: 2 }}>
                     <IconButton
                         onClick={onClose}
+                        disabled={submitting}
                         sx={{ position: "absolute", right: 12, top: 12 }}
                         aria-label="close"
                     >
@@ -627,6 +643,7 @@ export default function TradeFunnelDialog({ open, onClose, account, onSubmit }: 
                                 onClick={handleSubmit}
                                 variant="contained"
                                 fullWidth
+                                disabled={submitting}
                                 sx={{
                                     height: 56,
                                     borderRadius: 999,
@@ -635,7 +652,7 @@ export default function TradeFunnelDialog({ open, onClose, account, onSubmit }: 
                                     boxShadow: "0 16px 30px rgba(76, 68, 255, 0.18)",
                                 }}
                             >
-                                등록
+                                {submitting ? "등록 중..." : "등록"}
                             </Button>
                         )}
                     </Stack>

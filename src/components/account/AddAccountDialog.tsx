@@ -52,7 +52,7 @@ export default function AddAccountDialog({ open, onClose, onSuccess }: Props) {
                 initialBalance: values.initialBalance,
             });
 
-            onSuccess?.();
+            await onSuccess?.();
             onClose();
         } finally {
             setSubmitting(false);
