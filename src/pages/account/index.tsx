@@ -8,6 +8,8 @@ import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import { useNavigate } from "react-router-dom";
 import { useBuyStockMutation } from "../../services/trade/useBuyStockMutation";
+import { useAccountHoldingsQuery } from "../../services/account/useAccountHoldingsQuery";
+import { useSellStockMutation } from "../../services/trade/useSellStockMutation";
 
 import TradeFunnelDialog from "../../components/trade/TradeFunnelDialog";
 import type { TradeDraft } from "../../components/trade/TradeFunnelDialog";
@@ -37,6 +39,8 @@ import {
     DepositButton,
     WithdrawButton,
     FloatingAddFab,
+    AccountSwipeWrap,
+    AccountSwipeItem,
 } from "./AccountPage.styles";
 
 import AddAccountDialog from "../../components/account/AddAccountDialog";
@@ -102,6 +106,14 @@ export default function AccountPage() {
         );
     }, [typedAccounts]);
 
+    const {
+        data: holdings = [],
+        refetch: refetchHoldings,
+    } = useAccountHoldingsQuery(
+        selectedAccount ? Number(selectedAccount.accountId) : undefined,
+        openTrade && tradeSide === "SELL"
+    );
+
     const handleAddFirstAccount = () => setOpenAdd(true);
     const handleCloseAdd = () => setOpenAdd(false);
 
@@ -134,34 +146,57 @@ export default function AccountPage() {
     const closeTrade = () => setOpenTrade(false);
 
     const { mutateAsync: buyStockMutateAsync } = useBuyStockMutation();
+    const { mutateAsync: sellStockMutateAsync } = useSellStockMutation();
 
     const handleSubmitTrade = async (draft: TradeDraft) => {
         try {
+            const tradeDateTime = `${draft.tradeDate}T09:00:00`;
+
+            if (draft.type === "BUY") {
+                if (draft.market !== "KR") {
+                    alert("현재는 국내 주식 매수만 지원합니다.");
+                    return;
+                }
+
+                await buyStockMutateAsync({
+                    accountId: Number(draft.accountId),
+                    symbolCode: draft.symbolCode,
+                    quantity: draft.quantity,
+                    price: draft.price,
+                    tradeDate: tradeDateTime,
+                    memo: draft.memo,
+                });
+
+                await refetch();
+                closeTrade();
+                alert("매수 등록이 완료되었습니다.");
+                return;
+            }
+
             if (draft.type === "SELL") {
-                alert("매도 기능은 아직 백엔드 API가 연결되지 않았습니다.");
-                return;
+                if (draft.market !== "KR") {
+                    alert("현재는 국내 주식 매도만 지원합니다.");
+                    return;
+                }
+
+                await sellStockMutateAsync({
+                    accountId: Number(draft.accountId),
+                    symbolCode: draft.symbolCode,
+                    quantity: draft.quantity,
+                    price: draft.price,
+                    tradeDateTime,
+                    memo: draft.memo,
+                    fee: 0,
+                    tax: 0,
+                });
+
+                await Promise.all([refetch(), refetchHoldings()]);
+                closeTrade();
+                alert("매도 등록이 완료되었습니다.");
             }
-
-            if (draft.market !== "KR") {
-                alert("현재는 국내 주식 매수만 지원합니다.");
-                return;
-            }
-
-            await buyStockMutateAsync({
-                accountId: Number(draft.accountId),
-                symbolCode: draft.symbolCode,
-                quantity: draft.quantity,
-                price: draft.price,
-                tradeDate: draft.tradeDate,
-                memo: draft.memo,
-            });
-
-            await refetch();
-            closeTrade();
-            alert("매수 등록이 완료되었습니다.");
         } catch (e) {
             console.error(e);
-            alert(e instanceof Error ? e.message : "매수 등록 중 오류가 발생했습니다.");
+            alert(e instanceof Error ? e.message : "매매 등록 중 오류가 발생했습니다.");
         }
     };
 
@@ -250,7 +285,7 @@ export default function AccountPage() {
                         </EmptyWrap>
                     ) : (
                         <AccountListWrap>
-                            <Stack spacing={2}>
+                            <AccountSwipeWrap>
                                 {typedAccounts.map((a) => {
                                     const cash = toNumber(a.cashBalance);
                                     const stock = toNumber(a.stockAssetValue);
@@ -258,97 +293,98 @@ export default function AccountPage() {
                                     const holdingCount = a.holdingCount ?? 0;
 
                                     return (
-                                        <AccountCard
-                                            key={a.accountId}
-                                            elevation={0}
-                                            onClick={() => openTradeModal(a, "BUY")}
-                                            sx={{ cursor: "pointer" }}
-                                        >
-                                            <AccountCardContent>
-                                                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                                                    <Box>
-                                                        <AccountTitle>{a.accountName || a.brokerName}</AccountTitle>
-                                                        <AccountSub>{a.brokerName}</AccountSub>
-                                                        <AccountNumberText>{a.accountNumber}</AccountNumberText>
-                                                    </Box>
+                                        <AccountSwipeItem key={a.accountId}>
+                                            <AccountCard
+                                                elevation={0}
+                                                onClick={() => openTradeModal(a, "BUY")}
+                                                sx={{ cursor: "pointer", height: "100%" }}
+                                            >
+                                                <AccountCardContent>
+                                                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                                        <Box>
+                                                            <AccountTitle>{a.accountName || a.brokerName}</AccountTitle>
+                                                            <AccountSub>{a.brokerName}</AccountSub>
+                                                            <AccountNumberText>{a.accountNumber}</AccountNumberText>
+                                                        </Box>
 
-                                                    <DeleteButton
-                                                        size="small"
-                                                        aria-label="delete"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            const ok = window.confirm("이 계좌를 삭제할까요?");
-                                                            if (!ok) return;
-                                                            deleteAccount(a.accountId);
-                                                        }}
-                                                    >
-                                                        <DeleteOutlineRoundedIcon />
-                                                    </DeleteButton>
-                                                </Stack>
+                                                        <DeleteButton
+                                                            size="small"
+                                                            aria-label="delete"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const ok = window.confirm("이 계좌를 삭제할까요?");
+                                                                if (!ok) return;
+                                                                deleteAccount(a.accountId);
+                                                            }}
+                                                        >
+                                                            <DeleteOutlineRoundedIcon />
+                                                        </DeleteButton>
+                                                    </Stack>
 
-                                                <Box mt={2.5}>
-                                                    <Typography fontSize={12} color="text.secondary">
-                                                        총 자산
-                                                    </Typography>
-                                                    <Typography fontSize={24} fontWeight={800} lineHeight={1.2}>
-                                                        ₩{total.toLocaleString("ko-KR")}
-                                                    </Typography>
-
-                                                    <Typography fontSize={12} color="text.secondary" mt={0.7}>
-                                                        보유 종목 {holdingCount}개
-                                                    </Typography>
-                                                </Box>
-
-                                                <Divider sx={{ my: 2 }} />
-
-                                                <Stack direction="row" spacing={2}>
-                                                    <Box flex={1}>
+                                                    <Box mt={2.5}>
                                                         <Typography fontSize={12} color="text.secondary">
-                                                            현금
+                                                            총 자산
                                                         </Typography>
-                                                        <Typography fontSize={17} fontWeight={700}>
-                                                            ₩{cash.toLocaleString("ko-KR")}
+                                                        <Typography fontSize={24} fontWeight={800} lineHeight={1.2}>
+                                                            ₩{total.toLocaleString("ko-KR")}
+                                                        </Typography>
+
+                                                        <Typography fontSize={12} color="text.secondary" mt={0.7}>
+                                                            보유 종목 {holdingCount}개
                                                         </Typography>
                                                     </Box>
 
-                                                    <Box flex={1}>
-                                                        <Typography fontSize={12} color="text.secondary">
-                                                            보유 주식
-                                                        </Typography>
-                                                        <Typography fontSize={17} fontWeight={700}>
-                                                            ₩{stock.toLocaleString("ko-KR")}
-                                                        </Typography>
-                                                    </Box>
-                                                </Stack>
+                                                    <Divider sx={{ my: 2 }} />
 
-                                                <ActionsRow>
-                                                    <DepositButton
-                                                        variant="contained"
-                                                        startIcon={<ArrowDownwardRoundedIcon />}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            openTradeModal(a, "BUY");
-                                                        }}
-                                                    >
-                                                        매수
-                                                    </DepositButton>
+                                                    <Stack direction="row" spacing={2}>
+                                                        <Box flex={1}>
+                                                            <Typography fontSize={12} color="text.secondary">
+                                                                현금
+                                                            </Typography>
+                                                            <Typography fontSize={17} fontWeight={700}>
+                                                                ₩{cash.toLocaleString("ko-KR")}
+                                                            </Typography>
+                                                        </Box>
 
-                                                    <WithdrawButton
-                                                        variant="contained"
-                                                        startIcon={<ArrowUpwardRoundedIcon />}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            openTradeModal(a, "SELL");
-                                                        }}
-                                                    >
-                                                        매도
-                                                    </WithdrawButton>
-                                                </ActionsRow>
-                                            </AccountCardContent>
-                                        </AccountCard>
+                                                        <Box flex={1}>
+                                                            <Typography fontSize={12} color="text.secondary">
+                                                                보유 주식
+                                                            </Typography>
+                                                            <Typography fontSize={17} fontWeight={700}>
+                                                                ₩{stock.toLocaleString("ko-KR")}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Stack>
+
+                                                    <ActionsRow>
+                                                        <DepositButton
+                                                            variant="contained"
+                                                            startIcon={<ArrowDownwardRoundedIcon />}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                openTradeModal(a, "BUY");
+                                                            }}
+                                                        >
+                                                            매수
+                                                        </DepositButton>
+
+                                                        <WithdrawButton
+                                                            variant="contained"
+                                                            startIcon={<ArrowUpwardRoundedIcon />}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                openTradeModal(a, "SELL");
+                                                            }}
+                                                        >
+                                                            매도
+                                                        </WithdrawButton>
+                                                    </ActionsRow>
+                                                </AccountCardContent>
+                                            </AccountCard>
+                                        </AccountSwipeItem>
                                     );
                                 })}
-                            </Stack>
+                            </AccountSwipeWrap>
                         </AccountListWrap>
                     )}
                 </Container>
@@ -370,6 +406,7 @@ export default function AccountPage() {
                 open={openTrade}
                 onClose={closeTrade}
                 account={selectedAccount}
+                holdings={holdings}
                 onSubmit={handleSubmitTrade}
                 initialSide={tradeSide}
             />

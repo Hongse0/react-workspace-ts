@@ -8,7 +8,7 @@ export interface AccountSelectItem {
     accountNumber: string;
     accountName?: string;
     baseCurrency: string;
-    cashBalance: string; // 백엔드가 string으로 내려주는 구조 그대로
+    cashBalance: string;
     createdAt: string;
 }
 
@@ -20,11 +20,26 @@ export interface AccountCreateRequest {
     initialBalance: number;
 }
 
+export interface AccountHoldingItem {
+    accountId: number;
+    stockId: number;
+    symbolCode: string;
+    symbolName: string;
+    quantity: number;
+    avgPrice: number;
+    availableQuantity?: number;
+    currentPrice?: number;
+    evaluationAmount?: number;
+    profitLoss?: number;
+    profitRate?: number;
+}
+
 export type AccountResponse = AccountSelectItem;
 
 export interface AccountV1 {
     registerAccount(body: AccountCreateRequest): Promise<ServerResponse<AccountResponse>>;
     selectAll(): Promise<ServerResponse<AccountSelectItem[]>>;
+    selectHoldings(accountId: number): Promise<ServerResponse<AccountHoldingItem[]>>;
 }
 
 export class AccountService extends BaseAPIService implements AccountV1 {
@@ -37,9 +52,14 @@ export class AccountService extends BaseAPIService implements AccountV1 {
         return this.post<AccountResponse, AccountCreateRequest>("/register", body);
     }
 
-    /** 계좌 목록 조회 (POST /v1/account/select/all) */
+    /** 계좌 목록 조회 */
     selectAll() {
         return this.post<AccountSelectItem[], Record<string, never>>("/select/all", {});
+    }
+
+    /** 계좌별 보유 주식 조회 */
+    selectHoldings(accountId: number) {
+        return this.get<AccountHoldingItem[]>(`/${accountId}/holdings`);
     }
 
     deleteAccount(accountId: number) {

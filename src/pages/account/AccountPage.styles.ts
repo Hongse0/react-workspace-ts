@@ -2,8 +2,11 @@ import { Box, Card, Button, Fab, Typography, IconButton } from "@mui/material";
 import { alpha, styled } from "@mui/material/styles";
 
 export const Page = styled(Box)({
-    minHeight: "100dvh",
+    height: "100dvh",
     backgroundColor: "#F5F6FF",
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
 });
 
 export const Header = styled(Box)({
@@ -58,12 +61,15 @@ export const TotalValue = styled(Typography)({
 });
 
 export const Body = styled(Box)({
+    flex: 1,
+    minHeight: 0,
     marginTop: -26,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     backgroundColor: "#F5F6FF",
     paddingTop: 34,
-    paddingBottom: 80,
+    paddingBottom: 0,
+    overflow: "hidden",
 });
 
 export const EmptyWrap = styled(Box)({
@@ -114,7 +120,8 @@ export const AddFirstButtonHover = {
 
 export const AccountListWrap = styled(Box)({
     paddingTop: 8,
-    paddingBottom: 8,
+    paddingBottom: 0,
+    overflow: "hidden",
 });
 
 export const AccountCard = styled(Card)(({ theme }) => ({
@@ -192,3 +199,21 @@ export const FloatingAddFab = styled(Fab)({
     boxShadow: "0 14px 26px rgba(0,0,0,0.18)",
     background: "linear-gradient(135deg, #4E7BFF 0%, #9B4DFF 100%)",
 });
+
+export const AccountSwipeWrap = styled(Box)(() => ({
+    display: "flex",
+    gap: 16,
+    overflowX: "auto",
+    overflowY: "hidden",
+    paddingBottom: 0,
+    scrollSnapType: "x mandatory",
+    WebkitOverflowScrolling: "touch",
+    scrollbarWidth: "none",
+    "&::-webkit-scrollbar": {
+        display: "none",
+    },
+}));
+export const AccountSwipeItem = styled(Box)(() => ({
+    flex: "0 0 calc(100% - 24px)",
+    scrollSnapAlign: "center",
+}));

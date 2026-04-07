@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
     Box,
     Button,
@@ -18,9 +18,10 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import TrendingDownRoundedIcon from "@mui/icons-material/TrendingDownRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
-import {KrStockAutocomplete} from "./KrStockAutocomplete.tsx";
+import Inventory2RoundedIcon from "@mui/icons-material/Inventory2Rounded";
+import ShowChartRoundedIcon from "@mui/icons-material/ShowChartRounded";
+import { KrStockAutocomplete } from "./KrStockAutocomplete.tsx";
 
-// 실제 파일 있으면 import로 빼도 됨
 type StockSearchItem = {
     srtnCd: string;
     isinCd: string;
@@ -51,6 +52,19 @@ export type TradeDraft = {
     memo: string;
 };
 
+export type HoldingItem = {
+    stockId: number | string;
+    symbolCode: string;
+    symbolName: string;
+    quantity: number;
+    availableQuantity?: number;
+    avgPrice?: number;
+    currentPrice?: number;
+    evaluationAmount?: number;
+    profitLoss?: number;
+    profitRate?: number;
+};
+
 type Props = {
     open: boolean;
     onClose: () => void;
@@ -64,6 +78,7 @@ type Props = {
         totalAssetValue?: string | number | null;
         holdingCount?: number | null;
     } | null;
+    holdings?: HoldingItem[];
     onSubmit?: (draft: TradeDraft) => Promise<void> | void;
     initialSide?: TradeType;
 };
@@ -116,72 +131,16 @@ function ProgressBar({ stepIndex, total }: { stepIndex: number; total: number })
     );
 }
 
-function SelectCard({
-                        selected,
-                        title,
-                        icon,
-                        onClick,
-                        tone,
-                    }: {
-    selected: boolean;
-    title: string;
-    icon: React.ReactNode;
-    onClick: () => void;
-    tone?: "red" | "blue" | "gray";
-}) {
-    const toneMap = {
-        red: {
-            border: selected ? "1.5px solid #FF4D4F" : "1.5px solid #E6E8EE",
-            bg: selected ? "rgba(255, 77, 79, 0.08)" : "#fff",
-            color: selected ? "#FF4D4F" : "#6B7280",
-        },
-        blue: {
-            border: selected ? "1.5px solid #2F7BFF" : "1.5px solid #E6E8EE",
-            bg: selected ? "rgba(47, 123, 255, 0.10)" : "#fff",
-            color: selected ? "#2F7BFF" : "#6B7280",
-        },
-        gray: {
-            border: selected ? "1.5px solid #111827" : "1.5px solid #E6E8EE",
-            bg: selected ? "rgba(17, 24, 39, 0.04)" : "#fff",
-            color: selected ? "#111827" : "#6B7280",
-        },
-    }[tone ?? "gray"];
-
-    return (
-        <Box
-            role="button"
-            onClick={onClick}
-            sx={{
-                userSelect: "none",
-                cursor: "pointer",
-                flex: 1,
-                height: 132,
-                borderRadius: 3,
-                border: toneMap.border,
-                background: toneMap.bg,
-                boxShadow: selected ? "0 12px 24px rgba(17,24,39,0.08)" : "none",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "all .18s",
-            }}
-        >
-            <Stack spacing={1.2} alignItems="center">
-                <Box sx={{ color: toneMap.color }}>{icon}</Box>
-                <Typography sx={{ fontWeight: 800, color: toneMap.color }}>{title}</Typography>
-            </Stack>
-        </Box>
-    );
-}
-
 export default function TradeFunnelDialog({
                                               open,
                                               onClose,
                                               account,
+                                              holdings = [],
                                               onSubmit,
                                               initialSide = "BUY",
                                           }: Props) {
     const totalSteps = 4;
+
     const [step, setStep] = useState(0);
     const [submitting, setSubmitting] = useState(false);
 
@@ -194,17 +153,19 @@ export default function TradeFunnelDialog({
     const [tradeDate, setTradeDate] = useState<string>(todayISO());
     const [memo, setMemo] = useState("");
     const [selectedKrStock, setSelectedKrStock] = useState<StockSearchItem | null>(null);
+    const [selectedHolding, setSelectedHolding] = useState<HoldingItem | null>(null);
+
+    const sellableQuantity = useMemo(() => {
+        if (!selectedHolding) return 0;
+        return selectedHolding.availableQuantity ?? selectedHolding.quantity ?? 0;
+    }, [selectedHolding]);
 
     useEffect(() => {
-        if (market === "KR") {
+        if (market === "KR" && type === "BUY") {
             setSymbolName(selectedKrStock?.itmsNm ?? "");
             setSymbolCode(selectedKrStock?.srtnCd ?? "");
-        } else {
-            setSelectedKrStock(null);
-            setSymbolName("");
-            setSymbolCode("");
         }
-    }, [market, selectedKrStock]);
+    }, [market, selectedKrStock, type]);
 
     useEffect(() => {
         if (!open) return;
@@ -219,32 +180,64 @@ export default function TradeFunnelDialog({
         setTradeDate(todayISO());
         setMemo("");
         setSelectedKrStock(null);
+        setSelectedHolding(null);
     }, [open, initialSide]);
 
     const canNext = useMemo(() => {
-        if (step === 0) return !!type && !!account;
+        if (step === 0) return !!account;
 
         if (step === 1) {
+            if (type === "SELL") {
+                return !!selectedHolding;
+            }
+
             if (market === "KR") {
                 return !!selectedKrStock && !!symbolName.trim() && !!symbolCode.trim();
             }
+
             return !!market && symbolName.trim().length > 0 && symbolCode.trim().length > 0;
         }
 
-        if (step === 2) return quantity > 0 && price > 0;
-        if (step === 3) return true;
+        if (step === 2) {
+            if (type === "SELL") {
+                return quantity > 0 && quantity <= sellableQuantity && price > 0;
+            }
+            return quantity > 0 && price > 0;
+        }
 
+        if (step === 3) return true;
         return false;
-    }, [step, type, account, market, selectedKrStock, symbolName, symbolCode, quantity, price]);
+    }, [
+        step,
+        account,
+        type,
+        market,
+        selectedKrStock,
+        symbolName,
+        symbolCode,
+        selectedHolding,
+        quantity,
+        price,
+        sellableQuantity,
+    ]);
 
     const totalAmount = useMemo(() => quantity * price, [quantity, price]);
+
+    const selectedHoldingProfitColor = useMemo(() => {
+        const value = selectedHolding?.profitLoss ?? 0;
+        if (value > 0) return "#2563EB";
+        if (value < 0) return "#FF4D4F";
+        return "#111827";
+    }, [selectedHolding]);
 
     const handleNext = () => {
         if (!canNext) return;
         setStep((s) => Math.min(s + 1, totalSteps - 1));
     };
 
-    const handlePrev = () => setStep((s) => Math.max(s - 1, 0));
+    const handlePrev = () => {
+        setStep((s) => Math.max(s - 1, 0));
+    };
 
     const handleSubmit = async () => {
         if (!account) return;
@@ -274,7 +267,7 @@ export default function TradeFunnelDialog({
     return (
         <Dialog
             open={open}
-            onClose={onClose}
+            onClose={submitting ? undefined : onClose}
             fullWidth
             maxWidth="sm"
             PaperProps={{
@@ -325,27 +318,46 @@ export default function TradeFunnelDialog({
                 <Box sx={{ px: 3, py: 3 }}>
                     {step === 0 && (
                         <Stack spacing={2.2}>
-                            <Typography sx={{ fontSize: 20, fontWeight: 900 }}>매매 유형을 선택하세요</Typography>
+                            <Typography sx={{ fontSize: 20, fontWeight: 900 }}>
+                                거래 유형을 확인하세요
+                            </Typography>
 
-                            <Stack direction="row" spacing={2}>
-                                <SelectCard
-                                    selected={type === "BUY"}
-                                    title="매수"
-                                    tone="red"
-                                    icon={<TrendingDownRoundedIcon sx={{ fontSize: 34 }} />}
-                                    onClick={() => setType("BUY")}
-                                />
-                                <SelectCard
-                                    selected={type === "SELL"}
-                                    title="매도"
-                                    tone="gray"
-                                    icon={<TrendingUpRoundedIcon sx={{ fontSize: 34 }} />}
-                                    onClick={() => setType("SELL")}
-                                />
-                            </Stack>
+                            <Box
+                                sx={{
+                                    borderRadius: 3,
+                                    border:
+                                        type === "BUY"
+                                            ? "1.5px solid #FF4D4F"
+                                            : "1.5px solid #2F7BFF",
+                                    background:
+                                        type === "BUY"
+                                            ? "rgba(255, 77, 79, 0.06)"
+                                            : "rgba(47, 123, 255, 0.08)",
+                                    p: 2.2,
+                                }}
+                            >
+                                <Stack direction="row" spacing={1.4} alignItems="center">
+                                    {type === "BUY" ? (
+                                        <TrendingDownRoundedIcon sx={{ fontSize: 28, color: "#FF4D4F" }} />
+                                    ) : (
+                                        <TrendingUpRoundedIcon sx={{ fontSize: 28, color: "#2F7BFF" }} />
+                                    )}
+
+                                    <Box>
+                                        <Typography sx={{ fontWeight: 900, fontSize: 18 }}>
+                                            {type === "BUY" ? "매수" : "매도"}
+                                        </Typography>
+                                        <Typography sx={{ color: "#6B7280", fontWeight: 700, mt: 0.4 }}>
+                                            {type === "BUY"
+                                                ? "선택한 계좌로 종목을 매수합니다."
+                                                : "현재 계좌의 보유 종목을 선택해 매도합니다."}
+                                        </Typography>
+                                    </Box>
+                                </Stack>
+                            </Box>
 
                             <Box sx={{ mt: 1 }}>
-                                <Typography sx={{ fontWeight: 900, mb: 1 }}>계좌 선택</Typography>
+                                <Typography sx={{ fontWeight: 900, mb: 1 }}>계좌 확인</Typography>
 
                                 <Box
                                     sx={{
@@ -360,26 +372,37 @@ export default function TradeFunnelDialog({
                                 >
                                     <Box>
                                         <Typography sx={{ fontWeight: 900, fontSize: 16 }}>
-                                            {account?.accountName ?? "예금"}
+                                            {account?.accountName ?? "계좌"}
                                         </Typography>
                                         <Typography sx={{ color: "#6B7280", fontWeight: 700, mt: 0.4 }}>
                                             {account?.brokerName ?? "증권사"}
                                         </Typography>
+                                        <Typography sx={{ color: "#9CA3AF", fontWeight: 700, mt: 0.3, fontSize: 13 }}>
+                                            {account?.accountNumber ?? "-"}
+                                        </Typography>
                                     </Box>
 
-                                    <Typography sx={{ fontWeight: 900, color: "#2F7BFF", fontSize: 18 }}>
-                                        {money(toNumber(account?.cashBalance))}
-                                    </Typography>
+                                    <Box sx={{ textAlign: "right" }}>
+                                        <Typography sx={{ fontWeight: 900, color: "#2F7BFF", fontSize: 18 }}>
+                                            {money(toNumber(account?.cashBalance))}
+                                        </Typography>
+                                        <Typography sx={{ color: "#6B7280", fontWeight: 700, mt: 0.4, fontSize: 13 }}>
+                                            보유종목 {account?.holdingCount ?? 0}개
+                                        </Typography>
+                                    </Box>
                                 </Box>
                             </Box>
                         </Stack>
                     )}
 
-                    {step === 1 && (
+                    {step === 1 && type === "BUY" && (
                         <Stack spacing={2.2}>
-                            <Typography sx={{ fontSize: 20, fontWeight: 900 }}>종목 정보를 입력하세요</Typography>
+                            <Typography sx={{ fontSize: 20, fontWeight: 900 }}>
+                                종목 정보를 입력하세요
+                            </Typography>
 
                             <Typography sx={{ fontWeight: 900 }}>시장 선택</Typography>
+
                             <ToggleButtonGroup
                                 exclusive
                                 value={market}
@@ -470,17 +493,163 @@ export default function TradeFunnelDialog({
                         </Stack>
                     )}
 
+                    {step === 1 && type === "SELL" && (
+                        <Stack spacing={2.2}>
+                            <Box>
+                                <Typography sx={{ fontSize: 20, fontWeight: 900 }}>
+                                    보유 주식을 선택하세요
+                                </Typography>
+                                <Typography sx={{ mt: 0.8, color: "#6B7280", fontWeight: 700 }}>
+                                    현재 계좌에 보유 중인 종목만 매도할 수 있습니다.
+                                </Typography>
+                            </Box>
+
+                            {!holdings.length ? (
+                                <Box
+                                    sx={{
+                                        borderRadius: 3,
+                                        background: "#F7F8FB",
+                                        border: "1px dashed #D1D5DB",
+                                        p: 3,
+                                        textAlign: "center",
+                                    }}
+                                >
+                                    <Inventory2RoundedIcon sx={{ fontSize: 34, color: "#9CA3AF" }} />
+                                    <Typography sx={{ fontWeight: 800, color: "#6B7280", mt: 1.2 }}>
+                                        현재 보유 중인 주식이 없습니다.
+                                    </Typography>
+                                </Box>
+                            ) : (
+                                <Stack spacing={1.4}>
+                                    {holdings.map((item) => {
+                                        const isSelected = selectedHolding?.stockId === item.stockId;
+                                        const qty = item.availableQuantity ?? item.quantity ?? 0;
+                                        const rate = item.profitRate ?? 0;
+                                        const profitColor = rate > 0 ? "#2563EB" : rate < 0 ? "#FF4D4F" : "#111827";
+
+                                        return (
+                                            <Box
+                                                key={item.stockId}
+                                                onClick={() => {
+                                                    setSelectedHolding(item);
+                                                    setMarket("KR");
+                                                    setSymbolName(item.symbolName);
+                                                    setSymbolCode(item.symbolCode);
+                                                }}
+                                                sx={{
+                                                    cursor: "pointer",
+                                                    borderRadius: 3,
+                                                    border: isSelected ? "2px solid #2F7BFF" : "1.5px solid #E6E8EE",
+                                                    background: isSelected ? "rgba(47,123,255,0.08)" : "#fff",
+                                                    p: 2,
+                                                    transition: "all .18s",
+                                                    boxShadow: isSelected ? "0 10px 24px rgba(47,123,255,0.10)" : "none",
+                                                }}
+                                            >
+                                                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                                    <Box>
+                                                        <Typography sx={{ fontWeight: 900, fontSize: 17 }}>
+                                                            {item.symbolName}
+                                                        </Typography>
+                                                        <Typography sx={{ mt: 0.4, color: "#6B7280", fontWeight: 700 }}>
+                                                            {item.symbolCode}
+                                                        </Typography>
+
+                                                        <Stack direction="row" spacing={1} mt={1.2} flexWrap="wrap">
+                                                            <Chip
+                                                                size="small"
+                                                                icon={<ShowChartRoundedIcon />}
+                                                                label={`평균단가 ${money(item.avgPrice ?? 0)}`}
+                                                                sx={{ fontWeight: 800 }}
+                                                            />
+                                                        </Stack>
+                                                    </Box>
+
+                                                    <Box sx={{ textAlign: "right" }}>
+                                                        <Typography sx={{ fontWeight: 900 }}>
+                                                            {qty}주
+                                                        </Typography>
+                                                        <Typography
+                                                            sx={{
+                                                                mt: 0.5,
+                                                                color: profitColor,
+                                                                fontWeight: 900,
+                                                                fontSize: 13,
+                                                            }}
+                                                        >
+                                                            수익률 {rate > 0 ? "+" : ""}{rate.toFixed(2)}%
+                                                        </Typography>
+                                                    </Box>
+                                                </Stack>
+                                            </Box>
+                                        );
+                                    })}
+                                </Stack>
+                            )}
+                        </Stack>
+                    )}
+
                     {step === 2 && (
                         <Stack spacing={2.2}>
-                            <Typography sx={{ fontSize: 20, fontWeight: 900 }}>수량과 가격을 입력하세요</Typography>
+                            <Typography sx={{ fontSize: 20, fontWeight: 900 }}>
+                                {type === "BUY" ? "수량과 가격을 입력하세요" : "매도 수량과 가격을 입력하세요"}
+                            </Typography>
+
+                            {type === "SELL" && selectedHolding && (
+                                <Box
+                                    sx={{
+                                        borderRadius: 3,
+                                        background: "linear-gradient(135deg, rgba(47,123,255,0.08), rgba(181,76,255,0.08))",
+                                        p: 2,
+                                    }}
+                                >
+                                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                        <Box>
+                                            <Typography sx={{ fontWeight: 900, fontSize: 16 }}>
+                                                {selectedHolding.symbolName}
+                                            </Typography>
+                                            <Typography sx={{ mt: 0.4, color: "#6B7280", fontWeight: 700 }}>
+                                                {selectedHolding.symbolCode}
+                                            </Typography>
+                                        </Box>
+
+                                        <Box sx={{ textAlign: "right" }}>
+                                            <Typography sx={{ fontWeight: 900 }}>
+                                                보유 {sellableQuantity}주
+                                            </Typography>
+                                            <Typography sx={{ mt: 0.4, color: "#6B7280", fontWeight: 700, fontSize: 13 }}>
+                                                평균단가 {money(selectedHolding.avgPrice ?? 0)}
+                                            </Typography>
+                                        </Box>
+                                    </Stack>
+
+                                    <Divider sx={{ my: 1.5 }} />
+
+                                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                        <Typography sx={{ color: "#6B7280", fontWeight: 800 }}>평가손익</Typography>
+                                        <Typography sx={{ fontWeight: 900, color: selectedHoldingProfitColor }}>
+                                            {money(selectedHolding.profitLoss ?? 0)}
+                                        </Typography>
+                                    </Stack>
+                                </Box>
+                            )}
 
                             <TextField
                                 value={quantity === 0 ? "" : String(quantity)}
-                                onChange={(e) => setQuantity(Math.max(0, Math.floor(toNumber(e.target.value))))}
+                                onChange={(e) => {
+                                    const next = Math.max(0, Math.floor(toNumber(e.target.value)));
+                                    setQuantity(next);
+                                }}
                                 label="수량"
                                 placeholder="0"
                                 fullWidth
                                 inputMode="numeric"
+                                error={type === "SELL" && quantity > sellableQuantity}
+                                helperText={
+                                    type === "SELL"
+                                        ? `최대 ${sellableQuantity}주까지 매도할 수 있습니다.`
+                                        : " "
+                                }
                                 InputProps={{
                                     endAdornment: <InputAdornment position="end">주</InputAdornment>,
                                     sx: {
@@ -494,7 +663,7 @@ export default function TradeFunnelDialog({
                             <TextField
                                 value={price === 0 ? "" : String(price)}
                                 onChange={(e) => setPrice(Math.max(0, Math.floor(toNumber(e.target.value))))}
-                                label="가격"
+                                label={type === "BUY" ? "매수가격" : "매도가격"}
                                 placeholder="0"
                                 fullWidth
                                 inputMode="numeric"
@@ -518,7 +687,9 @@ export default function TradeFunnelDialog({
                                     alignItems: "center",
                                 }}
                             >
-                                <Typography sx={{ fontWeight: 900, color: "#374151" }}>총 금액</Typography>
+                                <Typography sx={{ fontWeight: 900, color: "#374151" }}>
+                                    {type === "BUY" ? "총 매수 금액" : "예상 매도 금액"}
+                                </Typography>
                                 <Typography sx={{ fontWeight: 900, color: "#2F7BFF", fontSize: 18 }}>
                                     {money(totalAmount)}
                                 </Typography>
@@ -528,15 +699,47 @@ export default function TradeFunnelDialog({
 
                     {step === 3 && (
                         <Stack spacing={2.2}>
-                            <Typography sx={{ fontSize: 20, fontWeight: 900 }}>최종 확인</Typography>
+                            <Box
+                                sx={{
+                                    borderRadius: 3,
+                                    p: 2,
+                                    background:
+                                        type === "BUY"
+                                            ? "linear-gradient(135deg, rgba(255,77,79,0.08), rgba(255,148,120,0.08))"
+                                            : "linear-gradient(135deg, rgba(47,123,255,0.08), rgba(181,76,255,0.08))",
+                                }}
+                            >
+                                <Typography sx={{ fontWeight: 900, fontSize: 16 }}>
+                                    {type === "BUY" ? "매수 주문 확인" : "매도 주문 확인"}
+                                </Typography>
+                                <Typography sx={{ mt: 0.6, color: "#6B7280", fontWeight: 700 }}>
+                                    입력한 주문 정보를 확인한 뒤 등록하세요.
+                                </Typography>
+                            </Box>
 
                             <Box sx={{ borderRadius: 3, background: "#F7F8FB", p: 2 }}>
                                 <Stack spacing={1.4}>
-                                    <Row label="거래 유형" value={type === "BUY" ? "매수" : "매도"} valueColor={type === "BUY" ? "#FF4D4F" : "#111827"} />
+                                    <Row
+                                        label="거래 유형"
+                                        value={type === "BUY" ? "매수" : "매도"}
+                                        valueColor={type === "BUY" ? "#FF4D4F" : "#2563EB"}
+                                    />
+                                    <Row label="계좌" value={account?.accountName ?? "-"} />
                                     <Row label="종목" value={symbolName || "-"} />
+                                    <Row label="종목코드" value={symbolCode || "-"} />
                                     <Row label="수량" value={`${quantity}주`} />
                                     <Row label="가격" value={money(price)} />
-                                    <Row label="총 금액" value={money(totalAmount)} valueColor="#2F7BFF" />
+                                    <Row
+                                        label={type === "BUY" ? "총 매수 금액" : "예상 매도 금액"}
+                                        value={money(totalAmount)}
+                                        valueColor="#2F7BFF"
+                                    />
+                                    {type === "SELL" && selectedHolding && (
+                                        <Row
+                                            label="보유 가능 수량"
+                                            value={`${sellableQuantity}주`}
+                                        />
+                                    )}
                                 </Stack>
                             </Box>
 
@@ -565,7 +768,7 @@ export default function TradeFunnelDialog({
                                 value={memo}
                                 onChange={(e) => setMemo(e.target.value)}
                                 label="메모 (선택)"
-                                placeholder="메모를 입력하세요"
+                                placeholder={type === "BUY" ? "매수 메모를 입력하세요" : "매도 메모를 입력하세요"}
                                 fullWidth
                                 InputProps={{
                                     sx: {
@@ -576,9 +779,10 @@ export default function TradeFunnelDialog({
                                 }}
                             />
 
-                            <Stack direction="row" spacing={1} alignItems="center">
+                            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                                 <Chip label={market === "KR" ? "한국" : "미국"} sx={{ fontWeight: 800 }} />
                                 <Chip label={`코드: ${symbolCode || "-"}`} sx={{ fontWeight: 800 }} />
+                                <Chip label={type === "BUY" ? "매수 주문" : "매도 주문"} sx={{ fontWeight: 800 }} />
                             </Stack>
                         </Stack>
                     )}
@@ -643,7 +847,7 @@ export default function TradeFunnelDialog({
                                 onClick={handleSubmit}
                                 variant="contained"
                                 fullWidth
-                                disabled={submitting}
+                                disabled={submitting || !canNext}
                                 sx={{
                                     height: 56,
                                     borderRadius: 999,
@@ -672,9 +876,11 @@ function Row({
     valueColor?: string;
 }) {
     return (
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 2 }}>
             <Typography sx={{ color: "#6B7280", fontWeight: 800 }}>{label}</Typography>
-            <Typography sx={{ fontWeight: 900, color: valueColor ?? "#111827" }}>{value}</Typography>
+            <Typography sx={{ fontWeight: 900, color: valueColor ?? "#111827", textAlign: "right" }}>
+                {value}
+            </Typography>
         </Box>
     );
 }
