@@ -1,0 +1,353 @@
+.home-page {
+    min-height: 100%;
+    padding: 0 16px 24px;
+    background: linear-gradient(180deg, #f7f6fb 0%, #f3f1f8 100%);
+}
+
+.dashboard-hero {
+    margin: 0 -16px;
+    padding: 28px 20px 30px;
+    background: linear-gradient(135deg, #4a7dff 0%, #8d4dff 52%, #ff2b7a 100%);
+    color: #ffffff;
+    border-bottom-left-radius: 28px;
+    border-bottom-right-radius: 28px;
+    box-shadow: 0 12px 30px rgba(118, 63, 255, 0.22);
+}
+
+.hero-greeting {
+    font-size: 18px;
+    font-weight: 700;
+    opacity: 0.95;
+}
+
+.hero-title {
+    margin-top: 8px;
+    font-size: 14px;
+    opacity: 0.82;
+}
+
+.hero-amount {
+    margin-top: 18px;
+    font-size: 38px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.hero-summary-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.hero-pill {
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(8px);
+}
+
+.hero-rate {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.home-tab-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 18px;
+    padding: 6px;
+    background: #ffffff;
+    border: 1px solid #ece8f3;
+    border-radius: 999px;
+    box-shadow: 0 8px 24px rgba(26, 32, 44, 0.05);
+}
+
+.home-tab {
+    height: 46px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    font-size: 16px;
+    font-weight: 700;
+    color: #2d2d2d;
+    cursor: pointer;
+}
+
+.home-tab.active {
+    color: #ffffff;
+    background: linear-gradient(135deg, #4a7dff 0%, #9747ff 100%);
+    box-shadow: 0 8px 16px rgba(121, 91, 255, 0.26);
+}
+
+.home-content {
+    margin-top: 18px;
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.summary-card {
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #ece8f3;
+    border-radius: 20px;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.05);
+}
+
+.summary-label {
+    font-size: 12px;
+    color: #8a8fa3;
+    margin-bottom: 8px;
+}
+
+.summary-value {
+    font-size: 18px;
+    font-weight: 800;
+    color: #222222;
+    line-height: 1.4;
+    word-break: break-all;
+}
+
+.summary-stock-name {
+    font-size: 17px;
+    font-weight: 800;
+    color: #222222;
+}
+
+.summary-stock-rate {
+    margin-top: 8px;
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.section-block {
+    margin-top: 18px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 0 2px;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    color: #1f2430;
+}
+
+.section-header span {
+    font-size: 14px;
+    color: #8a8fa3;
+    font-weight: 600;
+}
+
+.holding-list,
+.trade-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.holding-card,
+.trade-card {
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid #ece8f3;
+    border-radius: 24px;
+    padding: 18px;
+    box-shadow: 0 12px 30px rgba(25, 30, 45, 0.06);
+}
+
+.holding-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.holding-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.holding-name-row h3,
+.trade-top h3 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #20232d;
+}
+
+.holding-code,
+.trade-code {
+    margin-top: 6px;
+    font-size: 14px;
+    color: #8f94a8;
+}
+
+.market-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #4e63ff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.holding-price-box {
+    text-align: right;
+    min-width: 110px;
+}
+
+.holding-current-label {
+    font-size: 12px;
+    color: #8a8fa3;
+}
+
+.holding-current-price {
+    margin-top: 6px;
+    font-size: 20px;
+    font-weight: 800;
+    color: #1f2430;
+}
+
+.holding-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+    padding: 14px;
+    border-radius: 18px;
+    background: #f8f8fc;
+}
+
+.metric-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.metric-item span {
+    font-size: 12px;
+    color: #8a8fa3;
+}
+
+.metric-item strong {
+    font-size: 16px;
+    color: #20232d;
+    font-weight: 800;
+}
+
+.holding-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    gap: 12px;
+}
+
+.holding-profit-rate-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.holding-profit-rate-wrap span {
+    font-size: 13px;
+    color: #8a8fa3;
+}
+
+.holding-profit-rate-wrap strong {
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.holding-compare {
+    font-size: 13px;
+    color: #7e8498;
+    font-weight: 600;
+}
+
+.trade-card {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.trade-left-icon {
+    flex-shrink: 0;
+}
+
+.trade-left-icon span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.trade-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.trade-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.trade-total {
+    font-size: 18px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.trade-meta {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: #8a8fa3;
+    font-size: 14px;
+}
+
+.is-profit {
+    color: #1368ff;
+}
+
+.is-loss {
+    color: #ff3b30;
+}
+
+.is-neutral {
+    color: #6f7787;
+}
+
+.is-buy {
+    color: #1368ff;
+    background: #edf3ff;
+}
+
+.is-sell {
+    color: #ff3b30;
+    background: #fff0ef;
+}
