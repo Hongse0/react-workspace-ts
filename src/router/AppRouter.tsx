@@ -4,7 +4,8 @@ import MainLayout from '../module/layouts/MainLayout';
 import LoginPage from '../pages/login';
 import AccountPage from '../pages/account';
 import HomePage from '../pages/home';
-import ComingSoonPage from '../pages/auction';
+import StockSearchPage from "../pages/search";
+import SettingsPage from "../pages/settings";
 
 export default function AppRouter() {
     return (
@@ -15,9 +16,9 @@ export default function AppRouter() {
             <Route element={<ProtectedRoute />}>
                 <Route element={<MainLayout />}>
                     <Route path="/" element={<HomePage />} />
-                    <Route path="/market" element={<ComingSoonPage />} />
+                    <Route path="/market" element={<StockSearchPage />} />
                     <Route path="/account" element={<AccountPage />} />
-                    <Route path="/settings" element={<ComingSoonPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
                 </Route>
             </Route>
 
