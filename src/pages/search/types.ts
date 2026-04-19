@@ -1,11 +1,11 @@
 export interface StockItem {
-    id: number;
+    id: string;
     stockName: string;
     stockCode: string;
-    market: "KOSPI" | "KOSDAQ" | "ETF";
+    market: string;
     companyName: string;
-    price: number;
-    changeRate: number;
-    tags: string[];
-    description: string;
+    price?: number;
+    changeRate?: number;
+    tags?: string[];
+    description?: string;
 }

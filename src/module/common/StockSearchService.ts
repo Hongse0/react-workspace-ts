@@ -1,14 +1,23 @@
 import BaseAPIService from "../api/BaseAPIService";
 import type { ServerResponse } from "../api/Types";
 
+export interface StockSearchRequest {
+    q?: string;
+    mrktCtg?: string;
+    activeYn?: string;
+    basDt?: string;
+    size?: number;
+    fuzzy?: boolean;
+}
+
 export interface StockSearchItem {
     srtnCd: string;
-    isinCd: string;
-    mrktCtg: string;
-    itmsNm: string;
-    corpNm: string;
-    activeYn: string;
-    basDt: string;
+    isinCd: string | null;
+    mrktCtg: string | null;
+    itmsNm: string | null;
+    corpNm: string | null;
+    activeYn: string | null;
+    basDt: string | null;
 }
 
 export interface StockSearchResult {
@@ -18,10 +27,9 @@ export interface StockSearchResult {
     items: StockSearchItem[];
 }
 
-export type StockSearchResponse = StockSearchResult;
-
 export interface StockSearchV1 {
-    autocomplete(q: string, size?: number): Promise<ServerResponse<StockSearchResponse>>;
+    search(body: StockSearchRequest): Promise<ServerResponse<StockSearchResult>>;
+    autocomplete(q: string, size?: number): Promise<ServerResponse<StockSearchResult>>;
     getBySrtnCd(srtnCd: string): Promise<ServerResponse<StockSearchItem>>;
 }
 
@@ -30,16 +38,15 @@ export class StockSearchService extends BaseAPIService implements StockSearchV1 
         super(baseUrl, "v1", "stocks/search");
     }
 
-    /** 자동완성: GET /v1/stocks/search/autocomplete?q=삼성&size=10 */
-    autocomplete(q: string, size = 10) {
-        return this.get<StockSearchResponse>("/autocomplete", {
-            q,
-            size,
-        });
+    search(body: StockSearchRequest) {
+        return this.post<StockSearchResult, StockSearchRequest>("", body);
     }
 
-    /** 단축코드 단건조회: GET /v1/stocks/search/A005930 */
+    autocomplete(q: string, size = 10) {
+        return this.get<StockSearchResult>(`/autocomplete?q=${encodeURIComponent(q)}&size=${size}`);
+    }
+
     getBySrtnCd(srtnCd: string) {
-        return this.get<StockSearchItem>(`/${srtnCd}`);
+        return this.get<StockSearchItem>(`/${encodeURIComponent(srtnCd)}`);
     }
 }

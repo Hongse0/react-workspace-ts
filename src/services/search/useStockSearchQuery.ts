@@ -1,27 +1,40 @@
 import { useQuery } from "@tanstack/react-query";
-import { envConfig } from "../../module/constants/envConfig.ts";
-import {StockSearchService} from "../../module/common/StockSearchService.ts";
+import { envConfig } from "../../module/constants/envConfig";
+import {
+    StockSearchService,
+    type StockSearchResult,
+} from "../../module/common/StockSearchService";
 
 const stockSearchService = new StockSearchService(envConfig.API_URL);
 
-export const useStockSearchQuery = (params: { q: string; size?: number }) => {
-    const q = params.q?.trim() ?? "";
+export const STOCK_SEARCH_QK = ["stockSearch"];
 
+const emptyResult = (keyword: string, size: number): StockSearchResult => ({
+    query: keyword,
+    size,
+    total: 0,
+    items: [],
+});
+
+export const useStockSearchQuery = (keyword: string, size = 20) => {
     return useQuery({
-        queryKey: ["stockSearch", q, params.size ?? 20],
-        enabled: q.length > 0,
+        queryKey: [...STOCK_SEARCH_QK, keyword, size],
+        enabled: keyword.trim().length > 0,
+        staleTime: 1000 * 60 * 5,
         queryFn: async () => {
             const {
                 data: { code, result, messages },
-            } = await stockSearchService.searchStocks({ q, size: params.size ?? 20 });
+            } = await stockSearchService.search({
+                q: keyword,
+                size,
+                activeYn: "Y",
+            });
 
             if (code !== "000000") {
-                const msg = messages?.[0] ?? "검색 실패";
-                console.error(`${code}: ${msg}`);
-                throw new Error(msg);
+                throw new Error(messages?.[0] ?? "종목 검색 실패");
             }
 
-            return result;
+            return result ?? emptyResult(keyword, size);
         },
     });
 };

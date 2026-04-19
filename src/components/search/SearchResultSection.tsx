@@ -1,10 +1,10 @@
 import { Box, Chip, Paper, Typography } from "@mui/material";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
-import type { StockItem } from "../../pages/search/types"
+import type { StockItem } from "../../pages/search/types";
 
 interface Props {
     stockList: StockItem[];
-    selectedStockId: number | null;
+    selectedStockId: string | null;
     onSelectStock: (stock: StockItem) => void;
 }
 
@@ -37,6 +37,8 @@ export default function SearchResultSection({
                 ) : (
                     stockList.map((item) => {
                         const isSelected = item.id === selectedStockId;
+                        const price = item.price ?? 0;
+                        const changeRate = item.changeRate ?? 0;
 
                         return (
                             <Paper
@@ -65,16 +67,16 @@ export default function SearchResultSection({
 
                                     <Box className="stock-result-card__price-wrap">
                                         <Typography className="stock-result-card__price">
-                                            ₩{item.price.toLocaleString("ko-KR")}
+                                            ₩{price.toLocaleString("ko-KR")}
                                         </Typography>
                                         <Typography
                                             className={`stock-result-card__change ${
-                                                item.changeRate >= 0 ? "up" : "down"
+                                                changeRate >= 0 ? "up" : "down"
                                             }`}
                                         >
                                             <TrendingUpRoundedIcon sx={{ fontSize: 14 }} />
-                                            {item.changeRate > 0 ? "+" : ""}
-                                            {item.changeRate}%
+                                            {changeRate > 0 ? "+" : ""}
+                                            {changeRate}%
                                         </Typography>
                                     </Box>
                                 </Box>
@@ -84,11 +86,11 @@ export default function SearchResultSection({
                                 </Typography>
 
                                 <Typography className="stock-result-card__description">
-                                    {item.description}
+                                    {item.description ?? ""}
                                 </Typography>
 
                                 <Box className="stock-result-card__tag-wrap">
-                                    {item.tags.map((tag) => (
+                                    {(item.tags ?? []).map((tag) => (
                                         <span key={tag} className="stock-result-card__tag">
                                             #{tag}
                                         </span>
