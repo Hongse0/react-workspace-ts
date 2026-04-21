@@ -22,7 +22,7 @@ export function KrStockAutocomplete({ value, onSelect }: Props) {
 
     useEffect(() => {
         if (!value) return;
-        setInputValue(value.itmsNm);
+        setInputValue(value.itmsNm ?? '');
     }, [value]);
 
     return (

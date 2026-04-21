@@ -21,16 +21,17 @@ import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import Inventory2RoundedIcon from "@mui/icons-material/Inventory2Rounded";
 import ShowChartRoundedIcon from "@mui/icons-material/ShowChartRounded";
 import { KrStockAutocomplete } from "./KrStockAutocomplete.tsx";
+import type {StockSearchItem} from "../../module/common/StockSearchService.ts";
 
-type StockSearchItem = {
-    srtnCd: string;
-    isinCd: string;
-    mrktCtg: string;
-    itmsNm: string;
-    corpNm: string;
-    activeYn: string;
-    basDt: string;
-};
+// type StockSearchItem = {
+//     srtnCd: string;
+//     isinCd: string;
+//     mrktCtg: string;
+//     itmsNm: string;
+//     corpNm: string;
+//     activeYn: string;
+//     basDt: string;
+// };
 
 type TradeType = "BUY" | "SELL";
 type Market = "KR" | "US";
