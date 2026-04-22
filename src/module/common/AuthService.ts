@@ -11,6 +11,21 @@ export type LoginResult = {
     expiresIn: number;
 };
 
+export type SignupRequest = {
+    email: string;
+    password: string;
+    name: string;
+    nickname: string;
+};
+
+export type SignupResult = {
+    accessToken?: string;
+    expiresIn?: number;
+    email?: string;
+    name?: string;
+    nickname?: string;
+};
+
 export interface AuthV1 {
     login(body: LoginRequest): Promise<ServerResponse<LoginResult, LoginRequest>>;
     logout(): Promise<ServerResponse<void, unknown>>;
@@ -23,6 +38,10 @@ export class AuthService extends BaseAPIService implements AuthV1 {
 
     login(body: LoginRequest): Promise<ServerResponse<LoginResult, LoginRequest>> {
         return this.post<LoginResult, LoginRequest>("/auth/login", body);
+    }
+
+    signup(body: SignupRequest): Promise<ServerResponse<SignupResult, SignupRequest>> {
+        return this.post<SignupResult, SignupRequest>("/auth/signup", body);
     }
 
     logout(): Promise<ServerResponse<void, unknown>> {

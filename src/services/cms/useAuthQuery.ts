@@ -1,5 +1,11 @@
 import { useMutation } from '@tanstack/react-query';
-import { AuthService, type LoginRequest, type LoginResult } from '../../module/common/AuthService';
+import {
+    AuthService,
+    type LoginRequest,
+    type LoginResult,
+    type SignupRequest,
+    type SignupResult,
+} from '../../module/common/AuthService';
 import { envConfig } from '../../module/constants/envConfig';
 
 const authService = new AuthService(envConfig.API_URL);
@@ -19,6 +25,30 @@ export const useLoginMutation = () => {
 
             if (code !== '000000') {
                 const msg = messages?.[0] ?? '로그인에 실패했습니다.';
+                console.error(`${code}: ${msg}`);
+                throw new Error(msg);
+            }
+
+            return result;
+        },
+    });
+};
+
+/**
+ * 회원가입 mutation
+ * - 성공: result(SignupResult) 반환
+ * - 실패: throw Error(messages[0])
+ */
+export const useSignupMutation = () => {
+    return useMutation({
+        mutationKey: ['auth', 'signup'],
+        mutationFn: async (body: SignupRequest): Promise<SignupResult> => {
+            const {
+                data: { code, result, messages },
+            } = await authService.signup(body);
+
+            if (code !== '000000') {
+                const msg = messages?.[0] ?? '회원가입에 실패했습니다.';
                 console.error(`${code}: ${msg}`);
                 throw new Error(msg);
             }
