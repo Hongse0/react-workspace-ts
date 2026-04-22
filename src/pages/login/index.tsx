@@ -7,12 +7,14 @@ import {
     DialogTitle,
     DialogContent,
     IconButton,
+    Divider,
 } from '@mui/material';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import CloseIcon from '@mui/icons-material/Close';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/auto/useAuthStore.ts';
 import { useLoginMutation, useSignupMutation } from '../../services/cms/useAuthQuery.ts';
@@ -23,10 +25,19 @@ import {
     Hero,
     LogoCircle,
     LogoSquare,
+    HeroTitle,
+    HeroDescription,
+    HeroBadge,
     FormCard,
+    CardTitle,
+    CardDescription,
     FieldLabel,
     RoundedTextField,
     GradientButton,
+    SubtleTextButton,
+    ErrorText,
+    SuccessText,
+    FooterText,
 } from './LoginPage.styles';
 
 type LocationState = {
@@ -137,19 +148,30 @@ const LoginPage = () => {
                 nickname: signupNickname.trim(),
             });
 
-            setSignupSuccess('회원가입이 완료되었습니다.');
+            setSignupSuccess('회원가입이 완료되었습니다. 이제 로그인해보세요.');
 
-            // 가입 후 로그인 input 자동 채우기
             setEmail(signupEmail.trim());
             setPw(signupPassword);
 
             setTimeout(() => {
                 setOpenSignup(false);
                 setSignupSuccess(null);
-            }, 700);
+            }, 900);
         } catch (e: unknown) {
             const message = e instanceof Error ? e.message : '회원가입에 실패했습니다.';
             setSignupError(message);
+        }
+    };
+
+    const handleLoginKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            void onSubmit();
+        }
+    };
+
+    const handleSignupKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            void onSignupSubmit();
         }
     };
 
@@ -158,41 +180,48 @@ const LoginPage = () => {
             <Page>
                 <Shell>
                     <Hero>
+                        <HeroBadge>SMART MONEY ROUTINE</HeroBadge>
+
                         <LogoCircle>
                             <LogoSquare>
-                                <Typography fontWeight={900} color="#6A5CF6" sx={{ fontSize: 16 }}>
-                                    📈
+                                <Typography fontWeight={900} color="#6A5CF6" sx={{ fontSize: 18 }}>
+                                    💳
                                 </Typography>
                             </LogoSquare>
                         </LogoCircle>
 
-                        <Typography
-                            sx={{
-                                fontSize: 24,
-                                fontWeight: 900,
-                                lineHeight: 1.1,
-                                background: 'linear-gradient(90deg, #4E7BFF, #9A56FF)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                            }}
-                        >
-                            환영합니다
-                        </Typography>
+                        <HeroTitle>
+                            더 깔끔하게,
+                            <br />
+                            더 똑똑하게 자산 관리
+                        </HeroTitle>
 
-                        <Typography sx={{ fontSize: 13, color: 'rgba(0,0,0,0.55)', fontWeight: 600 }}>
-                            주식 포트폴리오 관리
-                        </Typography>
+                        <HeroDescription>
+                            소비와 자산 흐름을 한눈에 정리하는
+                            <br />
+                            개인 재테크 관리 서비스
+                        </HeroDescription>
                     </Hero>
 
                     <FormCard>
                         <Box display="flex" flexDirection="column" gap={3}>
                             <Box>
+                                <CardTitle>로그인</CardTitle>
+                                <CardDescription>
+                                    계정 정보를 입력하고 서비스를 시작해보세요
+                                </CardDescription>
+                            </Box>
+
+                            <Divider sx={{ borderColor: 'rgba(148, 163, 184, 0.18)' }} />
+
+                            <Box>
                                 <FieldLabel>이메일</FieldLabel>
                                 <RoundedTextField
                                     fullWidth
-                                    placeholder="example@email.com"
+                                    placeholder="이메일을 입력해주세요"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
+                                    onKeyDown={handleLoginKeyDown}
                                     autoComplete="email"
                                     InputProps={{
                                         startAdornment: (
@@ -208,10 +237,11 @@ const LoginPage = () => {
                                 <FieldLabel>비밀번호</FieldLabel>
                                 <RoundedTextField
                                     fullWidth
-                                    placeholder="••••••••"
+                                    placeholder="비밀번호를 입력해주세요"
                                     type="password"
                                     value={pw}
                                     onChange={(e) => setPw(e.target.value)}
+                                    onKeyDown={handleLoginKeyDown}
                                     autoComplete="current-password"
                                     InputProps={{
                                         startAdornment: (
@@ -223,35 +253,33 @@ const LoginPage = () => {
                                 />
                             </Box>
 
-                            {error && (
-                                <Typography sx={{ fontSize: 12, color: '#d32f2f', fontWeight: 800, mt: 2 }}>
-                                    {error}
-                                </Typography>
-                            )}
+                            {error && <ErrorText>{error}</ErrorText>}
 
-                            <Box mt={4}>
-                                <GradientButton fullWidth disabled={!canSubmit} onClick={onSubmit}>
+                            <Box mt={1}>
+                                <GradientButton
+                                    fullWidth
+                                    disabled={!canSubmit}
+                                    onClick={onSubmit}
+                                    endIcon={<ArrowForwardRoundedIcon />}
+                                >
                                     {isPending ? '로그인 중...' : '로그인'}
                                 </GradientButton>
                             </Box>
 
-                            <Box display="flex" justifyContent="center" mt={6}>
-                                <Typography sx={{ fontSize: 13, color: 'rgba(0,0,0,0.65)', fontWeight: 700 }}>
-                                    계정이 없으신가요?{' '}
-                                    <Box
-                                        component="span"
-                                        onClick={handleOpenSignup}
-                                        sx={{
-                                            cursor: 'pointer',
-                                            color: '#4E7BFF',
-                                            textDecoration: 'underline',
-                                            textUnderlineOffset: '3px',
-                                            fontWeight: 900,
-                                        }}
-                                    >
-                                        회원가입
-                                    </Box>
-                                </Typography>
+                            <Box
+                                display="flex"
+                                justifyContent="center"
+                                alignItems="center"
+                                flexDirection="column"
+                                mt={1}
+                                gap={1}
+                            >
+                                <FooterText>
+                                    아직 계정이 없으신가요?
+                                </FooterText>
+                                <SubtleTextButton onClick={handleOpenSignup}>
+                                    회원가입하기
+                                </SubtleTextButton>
                             </Box>
                         </Box>
                     </FormCard>
@@ -265,21 +293,43 @@ const LoginPage = () => {
                 maxWidth="xs"
                 PaperProps={{
                     sx: {
-                        borderRadius: '24px',
-                        p: 1,
+                        borderRadius: '28px',
+                        p: 1.5,
+                        background: 'rgba(255,255,255,0.96)',
+                        backdropFilter: 'blur(20px)',
+                        boxShadow: '0 24px 80px rgba(15, 23, 42, 0.16)',
                     },
                 }}
             >
                 <DialogTitle sx={{ pb: 1 }}>
-                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                    <Box display="flex" alignItems="flex-start" justifyContent="space-between">
                         <Box>
-                            <Typography sx={{ fontSize: 22, fontWeight: 900 }}>회원가입</Typography>
-                            <Typography sx={{ fontSize: 13, color: 'rgba(0,0,0,0.55)', mt: 0.5 }}>
-                                간단한 정보만 입력하면 바로 시작할 수 있어요
+                            <Typography sx={{ fontSize: 24, fontWeight: 900, color: '#0f172a' }}>
+                                회원가입
+                            </Typography>
+                            <Typography
+                                sx={{
+                                    fontSize: 13,
+                                    color: 'rgba(15, 23, 42, 0.58)',
+                                    mt: 0.8,
+                                    lineHeight: 1.5,
+                                }}
+                            >
+                                간단한 정보 입력 후
+                                <br />
+                                나만의 자산 관리를 시작해보세요
                             </Typography>
                         </Box>
 
-                        <IconButton onClick={handleCloseSignup}>
+                        <IconButton
+                            onClick={handleCloseSignup}
+                            sx={{
+                                backgroundColor: 'rgba(148, 163, 184, 0.12)',
+                                '&:hover': {
+                                    backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                                },
+                            }}
+                        >
                             <CloseIcon />
                         </IconButton>
                     </Box>
@@ -291,9 +341,10 @@ const LoginPage = () => {
                             <FieldLabel>이메일</FieldLabel>
                             <RoundedTextField
                                 fullWidth
-                                placeholder="example@email.com"
+                                placeholder="이메일을 입력해주세요"
                                 value={signupEmail}
                                 onChange={(e) => setSignupEmail(e.target.value)}
+                                onKeyDown={handleSignupKeyDown}
                                 autoComplete="email"
                                 InputProps={{
                                     startAdornment: (
@@ -309,10 +360,11 @@ const LoginPage = () => {
                             <FieldLabel>비밀번호</FieldLabel>
                             <RoundedTextField
                                 fullWidth
-                                placeholder="8자 이상 입력"
+                                placeholder="비밀번호를 입력해주세요"
                                 type="password"
                                 value={signupPassword}
                                 onChange={(e) => setSignupPassword(e.target.value)}
+                                onKeyDown={handleSignupKeyDown}
                                 autoComplete="new-password"
                                 InputProps={{
                                     startAdornment: (
@@ -328,9 +380,10 @@ const LoginPage = () => {
                             <FieldLabel>이름</FieldLabel>
                             <RoundedTextField
                                 fullWidth
-                                placeholder="홍세영"
+                                placeholder="이름을 입력해주세요"
                                 value={signupName}
                                 onChange={(e) => setSignupName(e.target.value)}
+                                onKeyDown={handleSignupKeyDown}
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
@@ -345,9 +398,10 @@ const LoginPage = () => {
                             <FieldLabel>닉네임</FieldLabel>
                             <RoundedTextField
                                 fullWidth
-                                placeholder="세영테스트"
+                                placeholder="닉네임을 입력해주세요"
                                 value={signupNickname}
                                 onChange={(e) => setSignupNickname(e.target.value)}
+                                onKeyDown={handleSignupKeyDown}
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
@@ -358,21 +412,17 @@ const LoginPage = () => {
                             />
                         </Box>
 
-                        {signupError && (
-                            <Typography sx={{ fontSize: 12, color: '#d32f2f', fontWeight: 800 }}>
-                                {signupError}
-                            </Typography>
-                        )}
-
-                        {signupSuccess && (
-                            <Typography sx={{ fontSize: 12, color: '#2e7d32', fontWeight: 800 }}>
-                                {signupSuccess}
-                            </Typography>
-                        )}
+                        {signupError && <ErrorText>{signupError}</ErrorText>}
+                        {signupSuccess && <SuccessText>{signupSuccess}</SuccessText>}
 
                         <Box mt={1}>
-                            <GradientButton fullWidth disabled={!canSignupSubmit} onClick={onSignupSubmit}>
-                                {isSignupPending ? '가입 중...' : '회원가입'}
+                            <GradientButton
+                                fullWidth
+                                disabled={!canSignupSubmit}
+                                onClick={onSignupSubmit}
+                                endIcon={<ArrowForwardRoundedIcon />}
+                            >
+                                {isSignupPending ? '가입 중...' : '회원가입 완료'}
                             </GradientButton>
                         </Box>
                     </Box>
