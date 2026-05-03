@@ -1,362 +1,384 @@
 .stock-search-page {
-    min-height: 100dvh;
-    background-color: #f5f6ff;
-    overflow: hidden;
+    min-height: 100vh;
+    background: #f4f6f8;
+    color: #111827;
+}
+
+.stock-search-container {
+    min-height: 100vh;
+    padding: 18px 16px 96px;
+    box-sizing: border-box;
+}
+
+/* 상단 헤더 */
+
+.stock-search-header {
     display: flex;
-    flex-direction: column;
-}
-
-.stock-search-page__header {
-    position: relative;
-    padding: 26px 16px 42px;
-    background: linear-gradient(135deg, #5b74ff 0%, #8c4bff 55%, #ff4d8d 100%);
-    overflow: hidden;
-}
-
-.stock-search-page__header-glow {
-    position: absolute;
-    inset: -80px;
-    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 55%);
-    pointer-events: none;
-}
-
-.stock-search-page__title {
-    color: #fff;
-    font-size: 22px !important;
-    font-weight: 800 !important;
-    letter-spacing: -0.5px;
-}
-
-.stock-search-page__subtitle {
-    color: rgba(255,255,255,0.88);
-    font-size: 14px !important;
-    line-height: 1.5;
-}
-
-.stock-search-page__hero-card {
-    margin-top: 10px;
-    border-radius: 18px;
-    padding: 14px;
-    min-height: 92px;
-    color: #fff;
-    background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.12));
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.18);
-}
-
-.stock-search-page__hero-top {
-    display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
 }
 
-.stock-search-page__hero-label {
+.stock-search-header__eyebrow {
+    margin-bottom: 5px !important;
     font-size: 13px !important;
-    font-weight: 700 !important;
-    opacity: 0.9;
+    font-weight: 800 !important;
+    color: #d32f2f !important;
 }
 
-.stock-search-page__hero-value {
-    margin-top: 4px !important;
+.stock-search-header__title {
     font-size: 28px !important;
+    line-height: 1.15 !important;
     font-weight: 900 !important;
-    letter-spacing: -1px;
-    line-height: 1.05;
+    letter-spacing: -0.05em !important;
+    color: #111827 !important;
 }
 
-.stock-search-page__hero-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 14px;
-    background: rgba(255,255,255,0.16);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.stock-search-page__hero-stats {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 14px;
-}
-
-.stock-search-page__hero-stat {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
+.stock-search-header__status {
+    flex-shrink: 0;
+    min-width: 52px;
+    padding: 7px 10px;
     border-radius: 999px;
-    background: rgba(255,255,255,0.12);
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    color: #4b5563;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
+}
+
+/* 검색 패널 */
+
+.stock-search-panel {
+    padding: 14px;
+    border-radius: 18px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+}
+
+/*
+   SearchHeaderSection 내부 스타일 보정
+   - 돋보기 아이콘 제거
+   - 검색창과 인기/최근 검색 영역 간격 조정
+*/
+
+.stock-search-panel input {
+    width: 100%;
+    height: 48px;
+    border: 0;
+    outline: none;
+    background: #f3f4f6;
+    border-radius: 14px;
+    padding: 0 14px !important;
+    box-sizing: border-box;
+    color: #111827;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.stock-search-panel input::placeholder {
+    color: #9ca3af;
+    font-weight: 600;
+}
+
+.stock-search-panel button {
+    border: 0;
+    cursor: pointer;
+}
+
+.stock-search-panel h2,
+.stock-search-panel h3,
+.stock-search-panel p {
+    margin: 0;
+}
+
+/* 검색창 돋보기 아이콘 제거 */
+.stock-search-panel svg[data-testid="SearchRoundedIcon"] {
+    display: none !important;
+}
+
+/*
+   단, 인기검색어/최근검색 아이콘은 유지해야 하므로
+   전체 svg display none은 사용하지 않음
+*/
+.stock-search-panel svg {
+    width: 22px;
+    height: 22px;
+    color: #111827;
+}
+
+/* 인기검색어 / 최근검색어 영역 간격 */
+
+.stock-search-panel section {
+    margin-top: 24px;
+}
+
+.stock-search-panel section:first-child,
+.stock-search-panel section:first-of-type {
+    margin-top: 0;
+}
+
+/* 인기검색어와 최근검색 사이 간격 */
+.stock-search-panel section + section {
+    margin-top: 28px;
+}
+
+/* 인기검색어/최근검색 제목 아이콘과 텍스트 간격 */
+.stock-search-panel section svg:not([data-testid="SearchRoundedIcon"]) {
+    margin-right: 6px;
+}
+
+/* 아이콘 있는 제목 줄 아래 간격 */
+.stock-search-panel section h2,
+.stock-search-panel section h3,
+.stock-search-panel section p {
+    line-height: 1.4;
+}
+
+/* 칩들이 너무 붙지 않게 */
+.stock-search-panel [class*="keyword"],
+.stock-search-panel [class*="chip"] {
+    max-width: 100%;
+}
+
+/* SearchHeaderSection 내부 div 간격 보정 */
+.stock-search-panel section > div {
+    row-gap: 10px;
+}
+
+/* 선택 종목 카드 */
+
+.selected-stock-card {
+    margin-top: 14px;
+    padding: 16px;
+    border-radius: 18px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+}
+
+.selected-stock-card__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.selected-stock-card__title-box {
+    min-width: 0;
+}
+
+.selected-stock-card__name-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+
+.selected-stock-card__name-row strong {
+    max-width: 180px;
+    color: #111827;
+    font-size: 20px;
+    line-height: 1.2;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.selected-stock-card__name-row span {
+    flex-shrink: 0;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    color: #4b5563;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 22px;
+}
+
+.selected-stock-card__title-box p {
+    margin: 5px 0 0;
+    color: #9ca3af;
     font-size: 12px;
     font-weight: 700;
 }
 
-.stock-search-page__body {
-    flex: 1;
-    min-height: 0;
-    margin-top: -26px;
-    border-top-left-radius: 28px;
-    border-top-right-radius: 28px;
-    background-color: #f5f6ff;
-    padding-top: 26px;
-    padding-bottom: 24px;
-    overflow-y: auto;
+.selected-stock-card__score {
+    flex-shrink: 0;
+    width: 64px;
+    padding: 10px 0;
+    border-radius: 14px;
+    background: #fff7ed;
+    text-align: center;
 }
 
-.search-header-section {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+.selected-stock-card__score span {
+    display: block;
+    margin-bottom: 3px;
+    color: #c2410c;
+    font-size: 10px;
+    font-weight: 900;
 }
 
-.search-input-card {
-    border-radius: 22px !important;
-    background: #fff !important;
-    padding: 10px 16px !important;
-    box-shadow: 0 6px 18px rgba(91, 116, 255, 0.08) !important;
+.selected-stock-card__score strong {
+    display: block;
+    color: #ea580c;
+    font-size: 22px;
+    line-height: 1;
+    font-weight: 900;
 }
 
-.search-input-card__row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 40px;
-}
-
-.search-input-card__icon {
-    color: #7c86a5;
-}
-
-.keyword-card {
-    border-radius: 20px !important;
-    background: #fff !important;
-    padding: 16px !important;
-    box-shadow: 0 6px 18px rgba(17, 24, 39, 0.04) !important;
-}
-
-.keyword-card__title-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 12px;
-    color: #5b74ff;
-}
-
-.keyword-card__title {
-    font-size: 14px !important;
-    font-weight: 800 !important;
-    color: #111827;
-}
-
-.keyword-card__chip-wrap {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.keyword-card__chip {
-    background: #f3f5ff !important;
-    color: #44516e !important;
-    font-weight: 700 !important;
-    border-radius: 999px !important;
-}
-
-.search-result-section {
-    margin-top: 18px;
-}
-
-.search-result-section__header {
+.selected-stock-card__price-row {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    padding: 0 4px;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.selected-stock-card__label {
+    display: block;
+    margin-bottom: 5px;
+    color: #9ca3af;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.selected-stock-card__price {
+    display: block;
+    color: #111827;
+    font-size: 28px;
+    line-height: 1.1;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+}
+
+.selected-stock-card__change {
+    text-align: right;
+}
+
+.selected-stock-card__change strong {
+    display: block;
+    font-size: 17px;
+    line-height: 1.15;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+}
+
+.selected-stock-card__change em {
+    display: block;
+    margin-top: 3px;
+    font-size: 13px;
+    font-style: normal;
+    font-weight: 900;
+}
+
+.selected-stock-card__meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.selected-stock-card__meta div {
+    min-width: 0;
+    padding: 11px;
+    border-radius: 13px;
+    background: #f8fafc;
+    border: 1px solid #edf0f3;
+}
+
+.selected-stock-card__meta span {
+    display: block;
+    margin-bottom: 5px;
+    color: #9ca3af;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.selected-stock-card__meta strong {
+    display: block;
+    color: #111827;
+    font-size: 12px;
+    font-weight: 900;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 검색 결과 */
+
+.stock-result-panel {
+    margin-top: 14px;
+    padding: 16px;
+    border-radius: 18px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+}
+
+.stock-result-panel__header {
     margin-bottom: 12px;
 }
 
-.search-result-section__title {
-    font-size: 20px !important;
-    font-weight: 800 !important;
+.stock-result-panel__header strong {
+    display: block;
     color: #111827;
-    letter-spacing: -0.3px;
+    font-size: 17px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
 }
 
-.search-result-section__count {
-    font-size: 13px !important;
-    font-weight: 700 !important;
-    color: #8a93a8;
-}
-
-.search-result-section__list {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    padding-bottom: 24px;
-}
-
-.stock-result-card {
-    border-radius: 22px !important;
-    padding: 18px !important;
-    background: #fff !important;
-    border: 1px solid #edf0f7;
-    box-shadow: 0 8px 20px rgba(17, 24, 39, 0.04);
-    cursor: pointer;
-    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-}
-
-.stock-result-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 10px 24px rgba(91, 116, 255, 0.08);
-    border-color: #dbe1ff;
-}
-
-.stock-result-card.is-selected {
-    background: linear-gradient(135deg, #5b74ff 0%, #8c4bff 60%, #ff4d8d 100%) !important;
-    border-color: transparent;
-    color: #fff;
-}
-
-.stock-result-card.is-selected .stock-result-card__name,
-.stock-result-card.is-selected .stock-result-card__code,
-.stock-result-card.is-selected .stock-result-card__company,
-.stock-result-card.is-selected .stock-result-card__description,
-.stock-result-card.is-selected .stock-result-card__price,
-.stock-result-card.is-selected .stock-result-card__change {
-    color: #fff !important;
-}
-
-.stock-result-card.is-selected .stock-result-card__tag {
-    background: rgba(255,255,255,0.18);
-    color: #fff;
-}
-
-.stock-result-card__top {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.stock-result-card__left {
-    min-width: 0;
-    flex: 1;
-}
-
-.stock-result-card__name {
-    font-size: 20px !important;
-    font-weight: 900 !important;
-    color: #111827;
-    letter-spacing: -0.4px;
-}
-
-.stock-result-card__meta {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.stock-result-card__market {
-    background: #eef2ff !important;
-    color: #5465d9 !important;
-    font-size: 11px !important;
-    font-weight: 800 !important;
-}
-
-.stock-result-card__code {
-    font-size: 13px !important;
-    color: #8a93a8;
-    font-weight: 700 !important;
-}
-
-.stock-result-card__price-wrap {
-    text-align: right;
-    flex-shrink: 0;
-}
-
-.stock-result-card__price {
-    font-size: 20px !important;
-    font-weight: 900 !important;
-    color: #111827;
-    letter-spacing: -0.4px;
-}
-
-.stock-result-card__change {
-    margin-top: 6px !important;
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    font-size: 13px !important;
-    font-weight: 800 !important;
-}
-
-.stock-result-card__change.up {
-    color: #ff3f6c;
-}
-
-.stock-result-card__change.down {
-    color: #3478f6;
-}
-
-.stock-result-card__company {
-    margin-top: 12px !important;
-    font-size: 14px !important;
-    color: #556070;
-    font-weight: 700 !important;
-}
-
-.stock-result-card__description {
-    margin-top: 6px !important;
-    font-size: 13px !important;
-    color: #8a93a8;
-    line-height: 1.5;
-}
-
-.stock-result-card__tag-wrap {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 14px;
-}
-
-.stock-result-card__tag {
-    padding: 6px 10px;
-    border-radius: 999px;
-    background: #f3f5ff;
-    color: #58637a;
-    font-size: 12px;
+.stock-result-panel__header p {
+    margin: 4px 0 0;
+    color: #6b7280;
+    font-size: 13px;
     font-weight: 700;
 }
 
-.search-empty-card {
-    border-radius: 22px !important;
-    padding: 36px 20px !important;
-    background: #fff !important;
-    text-align: center;
-    box-shadow: 0 8px 20px rgba(17, 24, 39, 0.04);
+/* SearchResultSection 내부 카드 보정 */
+
+.stock-result-panel article,
+.stock-result-panel li {
+    border-radius: 14px;
 }
 
-.search-empty-card__title {
-    font-size: 18px !important;
-    font-weight: 800 !important;
-    color: #111827;
+.stock-result-panel button {
+    border: 0;
+    cursor: pointer;
 }
 
-.search-empty-card__desc {
-    margin-top: 8px !important;
-    font-size: 14px !important;
-    color: #8a93a8;
+/* 한국 주식 컬러 */
+
+.is-rise {
+    color: #d32f2f !important;
 }
 
-@media (max-width: 600px) {
-    .stock-search-page__title {
-        font-size: 21px !important;
+.is-fall {
+    color: #1565c0 !important;
+}
+
+.is-flat {
+    color: #6b7280 !important;
+}
+
+/* 태블릿 이상 */
+
+@media (min-width: 768px) {
+    .stock-search-container {
+        padding: 28px 24px 110px;
     }
 
-    .stock-result-card__top {
-        flex-direction: column;
+    .stock-search-header__title {
+        font-size: 32px !important;
     }
 
-    .stock-result-card__price-wrap {
-        text-align: left;
+    .selected-stock-card__name-row strong {
+        max-width: 260px;
     }
 }

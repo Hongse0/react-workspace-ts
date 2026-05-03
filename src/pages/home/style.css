@@ -1,292 +1,392 @@
 .home-page {
-    min-height: 100%;
-    padding: 0 16px 24px;
-    background: linear-gradient(180deg, #f7f6fb 0%, #f3f1f8 100%);
+    min-height: 100vh;
+    padding: 16px;
+    background: #f5f6f8;
+    color: #111827;
+    box-sizing: border-box;
 }
 
+/* =========================
+   상태 화면
+========================= */
+
+.home-page:has(> :only-child) {
+    font-size: 15px;
+    color: #555;
+}
+
+/* =========================
+   Hero
+========================= */
+
 .dashboard-hero {
-    margin: 0 -16px;
-    padding: 28px 20px 30px;
-    background: linear-gradient(135deg, #4a7dff 0%, #8d4dff 52%, #ff2b7a 100%);
-    color: #ffffff;
-    border-bottom-left-radius: 28px;
-    border-bottom-right-radius: 28px;
-    box-shadow: 0 12px 30px rgba(118, 63, 255, 0.22);
+    padding: 22px 20px;
+    border-radius: 20px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
 .hero-greeting {
-    font-size: 18px;
-    font-weight: 700;
-    opacity: 0.95;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
 }
 
 .hero-title {
-    margin-top: 8px;
-    font-size: 14px;
-    opacity: 0.82;
+    margin-bottom: 18px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    color: #111827;
 }
 
 .hero-amount {
-    margin-top: 18px;
-    font-size: 38px;
-    font-weight: 800;
-    line-height: 1.2;
-    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+    font-size: 34px;
+    line-height: 1.1;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    color: #111827;
 }
 
 .hero-summary-row {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-top: 16px;
     flex-wrap: wrap;
+    gap: 8px;
 }
 
-.hero-pill {
-    padding: 10px 14px;
-    border-radius: 999px;
-    font-size: 15px;
-    font-weight: 700;
-    background: rgba(255, 255, 255, 0.16);
-    backdrop-filter: blur(8px);
-}
-
+.hero-pill,
 .hero-rate {
-    font-size: 16px;
-    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 800;
 }
+
+.hero-pill.is-profit,
+.hero-rate.is-profit {
+    background: #fff1f1;
+    color: #d32f2f;
+}
+
+.hero-pill.is-loss,
+.hero-rate.is-loss {
+    background: #eef5ff;
+    color: #1565c0;
+}
+
+.hero-pill.is-neutral,
+.hero-rate.is-neutral {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+/* =========================
+   Tabs
+========================= */
 
 .home-tab-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 5;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 18px;
-    padding: 6px;
-    background: #ffffff;
-    border: 1px solid #ece8f3;
-    border-radius: 999px;
-    box-shadow: 0 8px 24px rgba(26, 32, 44, 0.05);
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin: 16px 0;
+    padding: 5px;
+    border-radius: 14px;
+    background: #e9edf3;
 }
 
 .home-tab {
-    height: 46px;
+    height: 42px;
     border: 0;
-    border-radius: 999px;
+    border-radius: 11px;
     background: transparent;
-    font-size: 16px;
-    font-weight: 700;
-    color: #2d2d2d;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 800;
     cursor: pointer;
 }
 
 .home-tab.active {
-    color: #ffffff;
-    background: linear-gradient(135deg, #4a7dff 0%, #9747ff 100%);
-    box-shadow: 0 8px 16px rgba(121, 91, 255, 0.26);
+    background: #ffffff;
+    color: #111827;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
 }
 
+/* =========================
+   Content
+========================= */
+
 .home-content {
-    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
+
+/* =========================
+   Summary
+========================= */
 
 .summary-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 10px;
 }
 
 .summary-card {
+    min-width: 0;
     padding: 16px;
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid #ece8f3;
-    border-radius: 20px;
-    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.05);
+    border-radius: 16px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
 }
 
 .summary-label {
-    font-size: 12px;
-    color: #8a8fa3;
     margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
 }
 
 .summary-value {
-    font-size: 18px;
-    font-weight: 800;
-    color: #222222;
-    line-height: 1.4;
-    word-break: break-all;
+    font-size: 17px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    color: #111827;
+    word-break: keep-all;
 }
 
 .summary-stock-name {
-    font-size: 17px;
-    font-weight: 800;
-    color: #222222;
+    margin-bottom: 4px;
+    font-size: 15px;
+    font-weight: 900;
+    color: #111827;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .summary-stock-rate {
-    margin-top: 8px;
-    font-size: 16px;
-    font-weight: 800;
+    font-size: 15px;
+    font-weight: 900;
 }
 
+/* =========================
+   Section
+========================= */
+
 .section-block {
-    margin-top: 18px;
+    padding: 18px;
+    border-radius: 18px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
 }
 
 .section-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
-    padding: 0 2px;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
 }
 
 .section-header h2 {
     margin: 0;
-    font-size: 20px;
-    font-weight: 800;
-    color: #1f2430;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    color: #111827;
 }
 
 .section-header span {
-    font-size: 14px;
-    color: #8a8fa3;
-    font-weight: 600;
+    flex-shrink: 0;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #f3f4f6;
+    color: #4b5563;
+    font-size: 12px;
+    font-weight: 800;
 }
 
-.holding-list,
-.trade-list {
+/* =========================
+   Holdings
+========================= */
+
+.holding-list {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
 }
 
-.holding-card,
-.trade-card {
-    background: rgba(255, 255, 255, 0.94);
-    border: 1px solid #ece8f3;
-    border-radius: 24px;
-    padding: 18px;
-    box-shadow: 0 12px 30px rgba(25, 30, 45, 0.06);
+.holding-card {
+    padding: 16px;
+    border-radius: 16px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
 }
 
 .holding-top {
     display: flex;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
+    margin-bottom: 14px;
 }
 
 .holding-name-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    min-width: 0;
 }
 
-.holding-name-row h3,
-.trade-top h3 {
+.holding-name-row h3 {
     margin: 0;
-    font-size: 22px;
-    font-weight: 800;
-    color: #20232d;
-}
-
-.holding-code,
-.trade-code {
-    margin-top: 6px;
-    font-size: 14px;
-    color: #8f94a8;
+    max-width: 150px;
+    font-size: 17px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    color: #111827;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .market-badge {
+    flex-shrink: 0;
     display: inline-flex;
     align-items: center;
-    height: 24px;
-    padding: 0 10px;
+    justify-content: center;
+    height: 22px;
+    padding: 0 8px;
     border-radius: 999px;
-    background: #eef2ff;
-    color: #4e63ff;
+    background: #f3f4f6;
+    color: #4b5563;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.holding-code {
+    margin-top: 4px;
     font-size: 12px;
     font-weight: 700;
+    color: #9ca3af;
 }
 
 .holding-price-box {
+    flex-shrink: 0;
     text-align: right;
-    min-width: 110px;
 }
 
 .holding-current-label {
-    font-size: 12px;
-    color: #8a8fa3;
+    margin-bottom: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
 }
 
 .holding-current-price {
-    margin-top: 6px;
-    font-size: 20px;
-    font-weight: 800;
-    color: #1f2430;
+    font-size: 16px;
+    font-weight: 900;
+    color: #111827;
+    letter-spacing: -0.03em;
 }
+
+/* 보유 종목 지표 */
 
 .holding-metrics {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    margin-top: 18px;
-    padding: 14px;
-    border-radius: 18px;
-    background: #f8f8fc;
+    gap: 8px;
 }
 
 .metric-item {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    min-width: 0;
+    padding: 12px;
+    border-radius: 12px;
+    background: #f8fafc;
 }
 
 .metric-item span {
-    font-size: 12px;
-    color: #8a8fa3;
+    display: block;
+    margin-bottom: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
 }
 
 .metric-item strong {
-    font-size: 16px;
-    color: #20232d;
-    font-weight: 800;
+    display: block;
+    font-size: 13px;
+    font-weight: 900;
+    color: #111827;
+    letter-spacing: -0.03em;
+    word-break: keep-all;
 }
+
+/* 수익률 영역 */
 
 .holding-footer {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-top: 16px;
-    gap: 12px;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 13px;
+    border-top: 1px solid #edf0f3;
 }
 
 .holding-profit-rate-wrap {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .holding-profit-rate-wrap span {
-    font-size: 13px;
-    color: #8a8fa3;
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
 }
 
 .holding-profit-rate-wrap strong {
-    font-size: 18px;
-    font-weight: 800;
+    font-size: 16px;
+    font-weight: 900;
 }
 
 .holding-compare {
-    font-size: 13px;
-    color: #7e8498;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+}
+
+/* =========================
+   Trades
+========================= */
+
+.trade-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .trade-card {
     display: flex;
-    gap: 14px;
-    align-items: flex-start;
+    gap: 12px;
+    padding: 15px;
+    border-radius: 16px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
 }
 
 .trade-left-icon {
@@ -297,11 +397,21 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 54px;
-    height: 54px;
-    border-radius: 16px;
-    font-size: 14px;
-    font-weight: 800;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.trade-left-icon span.is-buy {
+    background: #fff1f1;
+    color: #d32f2f;
+}
+
+.trade-left-icon span.is-sell {
+    background: #eef5ff;
+    color: #1565c0;
 }
 
 .trade-main {
@@ -312,42 +422,120 @@
 .trade-top {
     display: flex;
     justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
+}
+
+.trade-top h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 900;
+    color: #111827;
+    letter-spacing: -0.03em;
+}
+
+.trade-code {
+    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #9ca3af;
 }
 
 .trade-total {
-    font-size: 18px;
+    flex-shrink: 0;
+    font-size: 15px;
     font-weight: 900;
-    white-space: nowrap;
+    letter-spacing: -0.03em;
+    text-align: right;
 }
 
 .trade-meta {
-    margin-top: 12px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    color: #8a8fa3;
-    font-size: 14px;
+    gap: 4px;
+    margin-top: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
 }
 
+/* =========================
+   Korean Stock Colors
+   상승/수익 = 빨강
+   하락/손실 = 파랑
+========================= */
+
 .is-profit {
-    color: #1368ff;
+    color: #d32f2f !important;
 }
 
 .is-loss {
-    color: #ff3b30;
+    color: #1565c0 !important;
 }
 
 .is-neutral {
-    color: #6f7787;
+    color: #6b7280 !important;
 }
 
 .is-buy {
-    color: #1368ff;
-    background: #edf3ff;
+    color: #d32f2f !important;
 }
 
 .is-sell {
-    color: #ff3b30;
-    background: #fff0ef;
+    color: #1565c0 !important;
+}
+
+/* =========================
+   Tablet / Desktop
+========================= */
+
+@media (min-width: 768px) {
+    .home-page {
+        padding: 28px;
+    }
+
+    .dashboard-hero {
+        padding: 28px;
+    }
+
+    .hero-title {
+        font-size: 26px;
+    }
+
+    .hero-amount {
+        font-size: 42px;
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .summary-card {
+        padding: 18px;
+    }
+
+    .holding-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .holding-name-row h3 {
+        max-width: 220px;
+    }
+
+    .trade-meta {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+}
+
+@media (min-width: 1200px) {
+    .home-page {
+        padding: 32px;
+    }
+
+    .holding-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
