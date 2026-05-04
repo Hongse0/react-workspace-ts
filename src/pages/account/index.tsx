@@ -1,238 +1,459 @@
+import { useMemo, useState } from "react";
 import { Box, Container, Typography } from "@mui/material";
-import { useEffect, useMemo, useState } from "react";
+import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
+import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import AccountBalanceWalletRoundedIcon from "@mui/icons-material/AccountBalanceWalletRounded";
+import { useNavigate } from "react-router-dom";
+
 import "./style.css";
-import SearchResultSection from "../../components/search/SearchResultSection.tsx";
-import SearchHeaderSection from "../../components/search/SearchHeaderSection.tsx";
-import { useDebounce } from "../../services/search/useDebounce";
-import { useStockSearchQuery } from "../../services/search/useStockSearchQuery";
-import type { StockSearchItem } from "../../module/common/StockSearchService";
-import type { StockItem } from "../search/types.ts";
 
-const TRENDING_KEYWORDS = ["삼성전자", "SK하이닉스", "ETF", "반도체", "2차전지"];
-const RECENT_KEYWORDS = ["NAVER", "카카오", "TIGER"];
+import { useBuyStockMutation } from "../../services/trade/useBuyStockMutation";
+import { useSellStockMutation } from "../../services/trade/useSellStockMutation";
+import { useAccountHoldingsQuery } from "../../services/account/useAccountHoldingsQuery";
+import { useAccountListQuery } from "../../services/account/useAccountListQuery";
+import { useDeleteAccountMutation } from "../../services/account/useDeleteAccountMutation.ts";
+import { useDepositAccountCashMutation } from "../../services/account/useDepositAccountCashMutation";
+import { useWithdrawAccountCashMutation } from "../../services/account/useWithdrawAccountCashMutation";
+import { useAuthStore } from "../../store/auto/useAuthStore";
+import { useLogoutMutation } from "../../services/cms/useAuthQuery.ts";
 
-type StockUiItem = StockItem & {
-    previousChange: number;
-    previousClose: number;
-    investmentScore: number;
-    scoreLabel: string;
-    baseDate: string | null;
+import AddAccountDialog from "../../components/account/AddAccountDialog";
+import TradeFunnelDialog from "../../components/trade/TradeFunnelDialog";
+import type { TradeDraft } from "../../components/trade/TradeFunnelDialog";
+import CashFunnelDialog from "../../components/account/CashFunnelDialog";
+
+type TradeSide = "BUY" | "SELL";
+
+type CashType = "DEPOSIT" | "WITHDRAW";
+
+type CashDraft = {
+    accountId: number;
+    type: CashType;
+    amount: number;
+    memo: string;
 };
 
-type StockSearchItemWithPrice = StockSearchItem & {
-    clpr?: number | null;
-    vs?: number | null;
-    fltRt?: number | null;
-    currentPrice?: number | null;
-    diff?: number | null;
-    changeRate?: number | null;
+type Account = {
+    accountId: number;
+    accountName?: string | null;
+    brokerName?: string | null;
+    accountNumber?: string | null;
+    cashBalance?: string | number | null;
+    stockAssetValue?: string | number | null;
+    totalAssetValue?: string | number | null;
+    holdingCount?: number | null;
 };
 
-function formatCurrency(value: number): string {
-    if (!value) return "-";
+const toNumber = (v: string | number | null | undefined) => {
+    if (v == null) return 0;
+    if (typeof v === "number") return v;
+    const n = Number(String(v).replace(/,/g, ""));
+    return Number.isFinite(n) ? n : 0;
+};
+
+const formatCurrency = (value: number) => {
     return `₩${Math.round(value).toLocaleString("ko-KR")}`;
-}
-
-function formatSignedCurrency(value: number): string {
-    if (value > 0) return `+${Math.round(value).toLocaleString("ko-KR")}`;
-    if (value < 0) return `${Math.round(value).toLocaleString("ko-KR")}`;
-    return "0";
-}
-
-function formatSignedRate(value: number): string {
-    if (value > 0) return `+${value.toFixed(2)}%`;
-    if (value < 0) return `${value.toFixed(2)}%`;
-    return "0.00%";
-}
-
-function getStockColorClass(value: number): string {
-    if (value > 0) return "is-rise";
-    if (value < 0) return "is-fall";
-    return "is-flat";
-}
-
-function calculateInvestmentScore(item: StockSearchItemWithPrice): number {
-    const activeScore = item.activeYn === "Y" ? 35 : 20;
-    const marketScore = item.mrktCtg === "KOSPI" ? 25 : item.mrktCtg === "KOSDAQ" ? 20 : 15;
-
-    const rate = Number(item.fltRt ?? item.changeRate ?? 0);
-    const momentumScore =
-        rate >= 5 ? 25 :
-            rate >= 2 ? 20 :
-                rate >= 0 ? 15 :
-                    rate >= -3 ? 10 :
-                        6;
-
-    const dataScore = item.basDt ? 15 : 8;
-
-    return Math.min(100, activeScore + marketScore + momentumScore + dataScore);
-}
-
-function getScoreLabel(score: number): string {
-    if (score >= 85) return "관심 높음";
-    if (score >= 70) return "양호";
-    if (score >= 55) return "보통";
-    return "주의";
-}
-
-export const toStockUiItem = (item: StockSearchItem): StockUiItem => {
-    const source = item as StockSearchItemWithPrice;
-
-    const currentPrice = Number(source.clpr ?? source.currentPrice ?? 0);
-    const previousChange = Number(source.vs ?? source.diff ?? 0);
-    const changeRate = Number(source.fltRt ?? source.changeRate ?? 0);
-    const investmentScore = calculateInvestmentScore(source);
-
-    return {
-        id: source.srtnCd,
-        stockName: source.itmsNm ?? "-",
-        stockCode: source.srtnCd ?? "-",
-        market: source.mrktCtg ?? "-",
-        companyName: source.corpNm ?? "-",
-        price: currentPrice,
-        previousChange,
-        previousClose: currentPrice && previousChange ? currentPrice - previousChange : 0,
-        changeRate,
-        investmentScore,
-        scoreLabel: getScoreLabel(investmentScore),
-        baseDate: source.basDt ?? null,
-        tags: [source.mrktCtg ?? "국내주식"].filter(Boolean),
-        description: source.corpNm ?? "",
-    };
 };
 
-export default function StockSearchPage() {
-    const [keyword, setKeyword] = useState("");
-    const [selectedStockCode, setSelectedStockCode] = useState<string | null>(null);
+export default function AccountPage() {
+    const [openAdd, setOpenAdd] = useState(false);
 
-    const debouncedKeyword = useDebounce(keyword, 300);
-    const { data, isFetching } = useStockSearchQuery(debouncedKeyword, 20);
+    const [openTrade, setOpenTrade] = useState(false);
+    const [tradeSide, setTradeSide] = useState<TradeSide>("BUY");
 
-    const stockList = useMemo(() => {
-        return (data?.items ?? []).map(toStockUiItem);
-    }, [data]);
+    const [openCash, setOpenCash] = useState(false);
+    const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
 
-    useEffect(() => {
-        if (!stockList.length) {
-            setSelectedStockCode(null);
-            return;
+    const {
+        data: accounts = [],
+        isLoading,
+        isError,
+        error,
+        refetch,
+    } = useAccountListQuery();
+
+    const typedAccounts = accounts as Account[];
+
+    const totalAsset = useMemo(() => {
+        return typedAccounts.reduce(
+            (sum, a) => sum + toNumber(a.totalAssetValue),
+            0
+        );
+    }, [typedAccounts]);
+
+    const totalCash = useMemo(() => {
+        return typedAccounts.reduce(
+            (sum, a) => sum + toNumber(a.cashBalance),
+            0
+        );
+    }, [typedAccounts]);
+
+    const totalStock = useMemo(() => {
+        return typedAccounts.reduce(
+            (sum, a) => sum + toNumber(a.stockAssetValue),
+            0
+        );
+    }, [typedAccounts]);
+
+    const {
+        data: holdings = [],
+        refetch: refetchHoldings,
+    } = useAccountHoldingsQuery(
+        selectedAccount ? Number(selectedAccount.accountId) : undefined,
+        openTrade && tradeSide === "SELL"
+    );
+
+    const { mutate: deleteAccount } = useDeleteAccountMutation();
+
+    const navigate = useNavigate();
+    const logout = useAuthStore((s) => s.logout);
+    const { mutateAsync: logoutMutateAsync } = useLogoutMutation();
+
+    const { mutateAsync: buyStockMutateAsync } = useBuyStockMutation();
+    const { mutateAsync: sellStockMutateAsync } = useSellStockMutation();
+
+    const { mutateAsync: depositCashMutateAsync } = useDepositAccountCashMutation();
+    const { mutateAsync: withdrawCashMutateAsync } = useWithdrawAccountCashMutation();
+
+    const handleLogout = async () => {
+        const ok = window.confirm("로그아웃 하시겠습니까?");
+        if (!ok) return;
+
+        try {
+            await logoutMutateAsync();
+        } catch (e) {
+            console.error(e);
+        } finally {
+            logout();
+            navigate("/login", { replace: true });
         }
+    };
 
-        setSelectedStockCode((prev) => {
-            if (prev && stockList.some((item) => item.stockCode === prev)) {
-                return prev;
+    const openTradeModal = (account: Account, side: TradeSide) => {
+        setSelectedAccount(account);
+        setTradeSide(side);
+        setOpenTrade(true);
+    };
+
+    const closeTrade = () => {
+        setOpenTrade(false);
+    };
+
+    const openCashModal = (account: Account) => {
+        setSelectedAccount(account);
+        setOpenCash(true);
+    };
+
+    const closeCash = () => {
+        setOpenCash(false);
+    };
+
+    const handleSubmitTrade = async (draft: TradeDraft) => {
+        try {
+            const tradeDateTime = `${draft.tradeDate}T09:00:00`;
+
+            if (draft.type === "BUY") {
+                if (draft.market !== "KR") {
+                    alert("현재는 국내 주식 매수만 지원합니다.");
+                    return;
+                }
+
+                await buyStockMutateAsync({
+                    accountId: Number(draft.accountId),
+                    symbolCode: draft.symbolCode,
+                    quantity: draft.quantity,
+                    price: draft.price,
+                    tradeDate: tradeDateTime,
+                    memo: draft.memo,
+                });
+
+                await refetch();
+                closeTrade();
+                alert("매수 등록이 완료되었습니다.");
+                return;
             }
-            return stockList[0].stockCode;
-        });
-    }, [stockList]);
 
-    const selectedStock =
-        stockList.find((item) => item.stockCode === selectedStockCode) ?? stockList[0] ?? null;
+            if (draft.type === "SELL") {
+                if (draft.market !== "KR") {
+                    alert("현재는 국내 주식 매도만 지원합니다.");
+                    return;
+                }
 
-    const hasKeyword = keyword.trim().length > 0;
+                await sellStockMutateAsync({
+                    accountId: Number(draft.accountId),
+                    symbolCode: draft.symbolCode,
+                    quantity: draft.quantity,
+                    price: draft.price,
+                    tradeDateTime,
+                    memo: draft.memo,
+                    fee: 0,
+                    tax: 0,
+                });
+
+                await Promise.all([refetch(), refetchHoldings()]);
+                closeTrade();
+                alert("매도 등록이 완료되었습니다.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert(e instanceof Error ? e.message : "매매 등록 중 오류가 발생했습니다.");
+        }
+    };
+
+    const handleSubmitCash = async (draft: CashDraft) => {
+        try {
+            const accountId = Number(draft.accountId);
+            const amount = Number(draft.amount);
+
+            if (!Number.isFinite(accountId)) {
+                alert("계좌 정보가 올바르지 않습니다.");
+                return;
+            }
+
+            if (!Number.isFinite(amount) || amount <= 0) {
+                alert("금액은 0보다 커야 합니다.");
+                return;
+            }
+
+            if (draft.type === "DEPOSIT") {
+                await depositCashMutateAsync({
+                    accountId,
+                    amount,
+                });
+
+                await refetch();
+                closeCash();
+                alert("입금이 완료되었습니다.");
+                return;
+            }
+
+            if (draft.type === "WITHDRAW") {
+                await withdrawCashMutateAsync({
+                    accountId,
+                    amount,
+                });
+
+                await refetch();
+                closeCash();
+                alert("인출이 완료되었습니다.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert(e instanceof Error ? e.message : "입출금 처리 중 오류가 발생했습니다.");
+        }
+    };
 
     return (
-        <Box className="stock-search-page">
-            <Container maxWidth="sm" disableGutters className="stock-search-container">
-                <header className="stock-search-header">
+        <Box className="account-page">
+            <Container maxWidth="sm" disableGutters className="account-container">
+                <header className="account-header">
                     <div>
-                        <Typography className="stock-search-header__eyebrow">
-                            국내 주식
+                        <Typography className="account-header__eyebrow">
+                            자산 관리
                         </Typography>
-                        <Typography className="stock-search-header__title">
-                            종목 검색
+                        <Typography className="account-header__title">
+                            증권 계좌
                         </Typography>
                     </div>
 
-                    <div className="stock-search-header__status">
-                        {isFetching ? "검색 중" : `${stockList.length}개`}
-                    </div>
+                    <button
+                        type="button"
+                        className="account-header__logout"
+                        onClick={handleLogout}
+                        aria-label="logout"
+                    >
+                        <LogoutRoundedIcon />
+                    </button>
                 </header>
 
-                <section className="stock-search-panel">
-                    <SearchHeaderSection
-                        keyword={keyword}
-                        trendingKeywords={TRENDING_KEYWORDS}
-                        recentKeywords={RECENT_KEYWORDS}
-                        onChangeKeyword={setKeyword}
-                        onClickKeyword={setKeyword}
-                    />
-                </section>
-
-                {selectedStock && (
-                    <section className="selected-stock-card">
-                        <div className="selected-stock-card__top">
-                            <div className="selected-stock-card__title-box">
-                                <div className="selected-stock-card__name-row">
-                                    <strong>{selectedStock.stockName}</strong>
-                                    <span>{selectedStock.market}</span>
-                                </div>
-                                <p>
-                                    {selectedStock.stockCode} · {selectedStock.companyName}
-                                </p>
-                            </div>
-
-                            <div className="selected-stock-card__score">
-                                <span>투자점수</span>
-                                <strong>{selectedStock.investmentScore}</strong>
-                            </div>
-                        </div>
-
-                        <div className="selected-stock-card__price-row">
-                            <div>
-                                <span className="selected-stock-card__label">현재가</span>
-                                <strong className="selected-stock-card__price">
-                                    {formatCurrency(selectedStock.price ?? 0)}
-                                </strong>
-                            </div>
-
-                            <div className="selected-stock-card__change">
-                                <span className="selected-stock-card__label">전일대비</span>
-                                <strong className={getStockColorClass(selectedStock.previousChange ?? 0)}>
-                                    {formatSignedCurrency(selectedStock.previousChange ?? 0)}
-                                </strong>
-                                <em className={getStockColorClass(selectedStock.changeRate ?? 0)}>
-                                    {formatSignedRate(selectedStock.changeRate ?? 0)}
-                                </em>
-                            </div>
-                        </div>
-
-                        <div className="selected-stock-card__meta">
-                            <div>
-                                <span>전일종가</span>
-                                <strong>{formatCurrency(selectedStock.previousClose)}</strong>
-                            </div>
-                            <div>
-                                <span>기준일</span>
-                                <strong>{selectedStock.baseDate ?? "-"}</strong>
-                            </div>
-                            <div>
-                                <span>평가</span>
-                                <strong>{selectedStock.scoreLabel}</strong>
-                            </div>
-                        </div>
-                    </section>
-                )}
-
-                <section className="stock-result-panel">
-                    <div className="stock-result-panel__header">
+                <section className="account-total-card">
+                    <div className="account-total-card__top">
                         <div>
-                            <strong>검색 결과</strong>
-                            <p>
-                                {hasKeyword
-                                    ? `${stockList.length}개 종목이 검색되었습니다`
-                                    : "종목명이나 종목코드를 입력해보세요"}
-                            </p>
+                            <span>총 자산</span>
+                            <strong>{formatCurrency(totalAsset)}</strong>
+                        </div>
+
+                        <div className="account-total-card__icon">
+                            <AccountBalanceWalletRoundedIcon />
                         </div>
                     </div>
 
-                    <SearchResultSection
-                        stockList={stockList}
-                        selectedStockId={selectedStock?.id ?? null}
-                        onSelectStock={(stock) => setSelectedStockCode(String(stock.stockCode))}
-                    />
+                    <div className="account-total-card__summary">
+                        <div>
+                            <span>현금</span>
+                            <strong>{formatCurrency(totalCash)}</strong>
+                        </div>
+                        <div>
+                            <span>보유 주식</span>
+                            <strong>{formatCurrency(totalStock)}</strong>
+                        </div>
+                    </div>
                 </section>
+
+                <main className="account-body">
+                    <div className="account-section-header">
+                        <div>
+                            <strong>내 계좌</strong>
+                            <p>
+                                계좌 카드를 누르면 입금/인출을 등록할 수 있습니다.
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            className="account-add-small-button"
+                            onClick={() => setOpenAdd(true)}
+                        >
+                            <AddRoundedIcon />
+                        </button>
+                    </div>
+
+                    {isLoading ? (
+                        <div className="account-state-card">
+                            불러오는 중...
+                        </div>
+                    ) : isError ? (
+                        <div className="account-state-card is-error">
+                            {error instanceof Error ? error.message : "오류가 발생했습니다."}
+                        </div>
+                    ) : typedAccounts.length === 0 ? (
+                        <section className="account-empty-card">
+                            <div className="account-empty-card__icon">
+                                <ReceiptLongRoundedIcon />
+                            </div>
+                            <strong>등록된 계좌가 없습니다</strong>
+                            <p>첫 계좌를 추가하고 자산 관리를 시작해보세요.</p>
+
+                            <button
+                                type="button"
+                                className="account-primary-button"
+                                onClick={() => setOpenAdd(true)}
+                            >
+                                <AddRoundedIcon />
+                                첫 계좌 추가하기
+                            </button>
+                        </section>
+                    ) : (
+                        <section className="account-swipe-wrap">
+                            {typedAccounts.map((a) => {
+                                const cash = toNumber(a.cashBalance);
+                                const stock = toNumber(a.stockAssetValue);
+                                const total = toNumber(a.totalAssetValue);
+                                const holdingCount = a.holdingCount ?? 0;
+
+                                return (
+                                    <article
+                                        key={a.accountId}
+                                        className="account-card"
+                                        onClick={() => openCashModal(a)}
+                                    >
+                                        <div className="account-card__top">
+                                            <div className="account-card__title-box">
+                                                <strong>{a.accountName || a.brokerName}</strong>
+                                                <span>{a.brokerName}</span>
+                                                <p>{a.accountNumber}</p>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                className="account-card__delete"
+                                                aria-label="delete"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const ok = window.confirm("이 계좌를 삭제할까요?");
+                                                    if (!ok) return;
+                                                    deleteAccount(a.accountId);
+                                                }}
+                                            >
+                                                <DeleteOutlineRoundedIcon />
+                                            </button>
+                                        </div>
+
+                                        <div className="account-card__asset">
+                                            <span>총 자산</span>
+                                            <strong>{formatCurrency(total)}</strong>
+                                            <p>보유 종목 {holdingCount}개</p>
+                                        </div>
+
+                                        <div className="account-card__summary">
+                                            <div>
+                                                <span>현금</span>
+                                                <strong>{formatCurrency(cash)}</strong>
+                                            </div>
+                                            <div>
+                                                <span>보유 주식</span>
+                                                <strong>{formatCurrency(stock)}</strong>
+                                            </div>
+                                        </div>
+
+                                        <div className="account-card__actions">
+                                            <button
+                                                type="button"
+                                                className="account-trade-button is-buy"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openTradeModal(a, "BUY");
+                                                }}
+                                            >
+                                                <ArrowDownwardRoundedIcon />
+                                                매수
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                className="account-trade-button is-sell"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openTradeModal(a, "SELL");
+                                                }}
+                                            >
+                                                <ArrowUpwardRoundedIcon />
+                                                매도
+                                            </button>
+                                        </div>
+                                    </article>
+                                );
+                            })}
+                        </section>
+                    )}
+                </main>
             </Container>
+
+            <button
+                type="button"
+                className="account-floating-button"
+                onClick={() => setOpenAdd(true)}
+            >
+                <AddRoundedIcon />
+            </button>
+
+            <AddAccountDialog
+                open={openAdd}
+                onClose={() => setOpenAdd(false)}
+                onSuccess={async () => {
+                    await refetch();
+                }}
+            />
+
+            <TradeFunnelDialog
+                open={openTrade}
+                onClose={closeTrade}
+                account={selectedAccount}
+                holdings={holdings}
+                onSubmit={handleSubmitTrade}
+                initialSide={tradeSide}
+            />
+
+            <CashFunnelDialog
+                open={openCash}
+                onClose={closeCash}
+                account={selectedAccount}
+                onSubmit={handleSubmitCash}
+            />
         </Box>
     );
 }
