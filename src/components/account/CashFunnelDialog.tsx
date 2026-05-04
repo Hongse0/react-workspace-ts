@@ -15,6 +15,13 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 type CashType = "DEPOSIT" | "WITHDRAW";
 type Step = "TYPE" | "AMOUNT" | "CONFIRM";
 
+export type CashDraft = {
+    accountId: number;
+    type: CashType;
+    amount: number;
+    memo: string;
+};
+
 type Account = {
     accountId: number;
     accountName?: string | null;
@@ -27,12 +34,7 @@ type Props = {
     open: boolean;
     onClose: () => void;
     account: Account | null;
-    onSubmit: (draft: {
-        accountId: number;
-        type: CashType;
-        amount: number;
-        memo: string;
-    }) => Promise<void> | void;
+    onSubmit: (draft: CashDraft) => Promise<void> | void;
 };
 
 const steps: { key: Step; label: string }[] = [
@@ -62,6 +64,7 @@ export default function CashFunnelDialog({
     const [type, setType] = useState<CashType>("DEPOSIT");
     const [amountText, setAmountText] = useState("");
     const [memo, setMemo] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const amount = useMemo(() => {
         const n = Number(amountText.replace(/,/g, ""));
@@ -76,10 +79,12 @@ export default function CashFunnelDialog({
             setType("DEPOSIT");
             setAmountText("");
             setMemo("");
+            setIsSubmitting(false);
         }
     }, [open]);
 
     const handleClose = () => {
+        if (isSubmitting) return;
         onClose();
     };
 
@@ -98,14 +103,33 @@ export default function CashFunnelDialog({
     };
 
     const handleSubmit = async () => {
-        if (!account) return;
+        if (!account) {
+            alert("선택된 계좌가 없습니다.");
+            return;
+        }
 
-        await onSubmit({
-            accountId: account.accountId,
-            type,
-            amount,
-            memo,
-        });
+        if (amount <= 0) {
+            alert("금액을 입력해주세요.");
+            return;
+        }
+
+        if (type === "WITHDRAW" && amount > cashBalance) {
+            alert("인출 금액이 현재 현금 잔액보다 큽니다.");
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+
+            await onSubmit({
+                accountId: account.accountId,
+                type,
+                amount,
+                memo,
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const currentStepIndex = steps.findIndex((s) => s.key === step);
@@ -143,6 +167,7 @@ export default function CashFunnelDialog({
                     <IconButton
                         onClick={handleClose}
                         size="small"
+                        disabled={isSubmitting}
                         sx={{
                             width: 36,
                             height: 36,
@@ -306,6 +331,7 @@ export default function CashFunnelDialog({
                                 fullWidth
                                 variant="outlined"
                                 onClick={() => setStep("TYPE")}
+                                disabled={isSubmitting}
                                 sx={{
                                     height: 52,
                                     borderRadius: "16px",
@@ -321,6 +347,7 @@ export default function CashFunnelDialog({
                                 fullWidth
                                 variant="contained"
                                 onClick={handleNextAmount}
+                                disabled={isSubmitting}
                                 sx={{
                                     height: 52,
                                     borderRadius: "16px",
@@ -394,6 +421,7 @@ export default function CashFunnelDialog({
                                 fullWidth
                                 variant="outlined"
                                 onClick={() => setStep("AMOUNT")}
+                                disabled={isSubmitting}
                                 sx={{
                                     height: 52,
                                     borderRadius: "16px",
@@ -409,6 +437,7 @@ export default function CashFunnelDialog({
                                 fullWidth
                                 variant="contained"
                                 onClick={handleSubmit}
+                                disabled={isSubmitting}
                                 sx={{
                                     height: 52,
                                     borderRadius: "16px",
@@ -416,7 +445,7 @@ export default function CashFunnelDialog({
                                     bgcolor: type === "DEPOSIT" ? "#d32f2f" : "#1565c0",
                                 }}
                             >
-                                등록하기
+                                {isSubmitting ? "처리 중..." : "등록하기"}
                             </Button>
                         </Stack>
                     </Stack>
