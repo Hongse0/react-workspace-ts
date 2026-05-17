@@ -8,7 +8,6 @@ import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import AccountBalanceWalletRoundedIcon from "@mui/icons-material/AccountBalanceWalletRounded";
 import { useNavigate } from "react-router-dom";
-
 import "./style.css";
 
 import { useBuyStockMutation } from "../../services/trade/useBuyStockMutation";
@@ -51,6 +50,7 @@ type Account = {
 const toNumber = (v: string | number | null | undefined) => {
     if (v == null) return 0;
     if (typeof v === "number") return v;
+
     const n = Number(String(v).replace(/,/g, ""));
     return Number.isFinite(n) ? n : 0;
 };
@@ -68,6 +68,10 @@ export default function AccountPage() {
     const [openCash, setOpenCash] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
 
+    const navigate = useNavigate();
+
+    const logout = useAuthStore((s) => s.logout);
+
     const {
         data: accounts = [],
         isLoading,
@@ -76,25 +80,27 @@ export default function AccountPage() {
         refetch,
     } = useAccountListQuery();
 
-    const typedAccounts = accounts as Account[];
+    const typedAccounts = useMemo(() => {
+        return accounts as Account[];
+    }, [accounts]);
 
     const totalAsset = useMemo(() => {
         return typedAccounts.reduce(
-            (sum, a) => sum + toNumber(a.totalAssetValue),
+            (sum, account) => sum + toNumber(account.totalAssetValue),
             0
         );
     }, [typedAccounts]);
 
     const totalCash = useMemo(() => {
         return typedAccounts.reduce(
-            (sum, a) => sum + toNumber(a.cashBalance),
+            (sum, account) => sum + toNumber(account.cashBalance),
             0
         );
     }, [typedAccounts]);
 
     const totalStock = useMemo(() => {
         return typedAccounts.reduce(
-            (sum, a) => sum + toNumber(a.stockAssetValue),
+            (sum, account) => sum + toNumber(account.stockAssetValue),
             0
         );
     }, [typedAccounts]);
@@ -109,8 +115,6 @@ export default function AccountPage() {
 
     const { mutate: deleteAccount } = useDeleteAccountMutation();
 
-    const navigate = useNavigate();
-    const logout = useAuthStore((s) => s.logout);
     const { mutateAsync: logoutMutateAsync } = useLogoutMutation();
 
     const { mutateAsync: buyStockMutateAsync } = useBuyStockMutation();
@@ -277,9 +281,14 @@ export default function AccountPage() {
                             <strong>{formatCurrency(totalAsset)}</strong>
                         </div>
 
-                        <div className="account-total-card__icon">
+                        <button
+                            type="button"
+                            className="account-total-card__snapshot-button"
+                            onClick={() => navigate("/account/snapshot")}
+                            aria-label="자산 변화 페이지로 이동"
+                        >
                             <AccountBalanceWalletRoundedIcon />
-                        </div>
+                        </button>
                     </div>
 
                     <div className="account-total-card__summary">
@@ -339,23 +348,25 @@ export default function AccountPage() {
                         </section>
                     ) : (
                         <section className="account-swipe-wrap">
-                            {typedAccounts.map((a) => {
-                                const cash = toNumber(a.cashBalance);
-                                const stock = toNumber(a.stockAssetValue);
-                                const total = toNumber(a.totalAssetValue);
-                                const holdingCount = a.holdingCount ?? 0;
+                            {typedAccounts.map((account: Account) => {
+                                const cash = toNumber(account.cashBalance);
+                                const stock = toNumber(account.stockAssetValue);
+                                const total = toNumber(account.totalAssetValue);
+                                const holdingCount = account.holdingCount ?? 0;
 
                                 return (
                                     <article
-                                        key={a.accountId}
+                                        key={account.accountId}
                                         className="account-card"
-                                        onClick={() => openCashModal(a)}
+                                        onClick={() => openCashModal(account)}
                                     >
                                         <div className="account-card__top">
                                             <div className="account-card__title-box">
-                                                <strong>{a.accountName || a.brokerName}</strong>
-                                                <span>{a.brokerName}</span>
-                                                <p>{a.accountNumber}</p>
+                                                <strong>
+                                                    {account.accountName || account.brokerName}
+                                                </strong>
+                                                <span>{account.brokerName}</span>
+                                                <p>{account.accountNumber}</p>
                                             </div>
 
                                             <button
@@ -364,9 +375,11 @@ export default function AccountPage() {
                                                 aria-label="delete"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
+
                                                     const ok = window.confirm("이 계좌를 삭제할까요?");
                                                     if (!ok) return;
-                                                    deleteAccount(a.accountId);
+
+                                                    deleteAccount(account.accountId);
                                                 }}
                                             >
                                                 <DeleteOutlineRoundedIcon />
@@ -396,7 +409,7 @@ export default function AccountPage() {
                                                 className="account-trade-button is-buy"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    openTradeModal(a, "BUY");
+                                                    openTradeModal(account, "BUY");
                                                 }}
                                             >
                                                 <ArrowDownwardRoundedIcon />
@@ -408,7 +421,7 @@ export default function AccountPage() {
                                                 className="account-trade-button is-sell"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    openTradeModal(a, "SELL");
+                                                    openTradeModal(account, "SELL");
                                                 }}
                                             >
                                                 <ArrowUpwardRoundedIcon />
