@@ -1,0 +1,163 @@
+.manual-batch-page {
+    min-height: 100vh;
+    background: #f6f8fb;
+    padding-bottom: 88px;
+}
+
+.manual-batch-container {
+    padding: 20px 16px 32px;
+}
+
+.manual-batch-header {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 18px;
+}
+
+.manual-batch-header__back {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #1f2937;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.manual-batch-header__eyebrow {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    color: #2563eb;
+}
+
+.manual-batch-header__title {
+    margin-top: 2px !important;
+    font-size: 26px !important;
+    font-weight: 900 !important;
+    color: #111827;
+}
+
+.manual-batch-header__desc {
+    margin-top: 6px !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    color: #6b7280;
+}
+
+.manual-batch-date-card,
+.manual-batch-card {
+    border-radius: 22px !important;
+    background: #ffffff !important;
+    border: 1px solid #eef2f7;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.manual-batch-date-card {
+    padding: 16px;
+}
+
+.manual-batch-section-title {
+    margin-bottom: 12px !important;
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    color: #111827;
+}
+
+.manual-batch-date-card .MuiOutlinedInput-root {
+    border-radius: 16px;
+    background: #f8fafc;
+}
+
+.manual-batch-date-card .MuiInputBase-input {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+.manual-batch-date-card .MuiFormHelperText-root {
+    margin-left: 2px;
+    margin-top: 8px;
+    color: #8a94a6;
+    line-height: 1.5;
+}
+
+.manual-batch-card {
+    padding: 16px;
+}
+
+.manual-batch-card__top {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.manual-batch-card__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 16px;
+    background: #eff6ff;
+    color: #2563eb;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.manual-batch-card__icon svg {
+    font-size: 24px;
+}
+
+.manual-batch-card__content {
+    min-width: 0;
+}
+
+.manual-batch-card__title {
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    color: #111827;
+}
+
+.manual-batch-card__desc {
+    margin-top: 5px !important;
+    font-size: 13px !important;
+    line-height: 1.45 !important;
+    color: #6b7280;
+}
+
+.manual-batch-card__endpoint {
+    display: inline-flex;
+    margin-top: 9px !important;
+    padding: 5px 8px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+}
+
+.manual-batch-card__button {
+    height: 44px;
+    border-radius: 15px !important;
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    background: #2563eb !important;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.22) !important;
+}
+
+.manual-batch-card__button.Mui-disabled {
+    background: #cbd5e1 !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+}
+
+.manual-batch-result {
+    margin-top: 16px;
+    border-radius: 16px !important;
+    font-size: 14px;
+}

@@ -127,8 +127,8 @@ export default function SettingsPage() {
                                 <SettingMenuItem
                                     icon={<SecurityRoundedIcon />}
                                     title="보안 및 로그인"
-                                    description="로그인 상태와 계정 보안 설정"
-                                    onClick={() => alert("보안 설정 페이지는 추후 연결")}
+                                    description="배치 수동 실행 및 관리자 기능"
+                                    onClick={() => navigate("/settings/security")}
                                 />
                             </Stack>
                         </Box>
