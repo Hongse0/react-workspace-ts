@@ -1,10 +1,9 @@
 import { Box, Container, Typography } from "@mui/material";
-import { useEffect, useMemo, useState } from "react";
+import {type FormEvent, useEffect, useMemo, useState } from "react";
 import type { StockItem } from "./types";
 import "./style.css";
 import SearchResultSection from "../../components/search/SearchResultSection.tsx";
 import SearchHeaderSection from "../../components/search/SearchHeaderSection.tsx";
-import { useDebounce } from "../../services/search/useDebounce";
 import { useStockSearchQuery } from "../../services/search/useStockSearchQuery";
 import type { StockSearchItem } from "../../module/common/StockSearchService";
 
@@ -91,7 +90,7 @@ export const toStockUiItem = (item: StockSearchItem): StockUiItem => {
         companyName: source.corpNm ?? "-",
         price: currentPrice,
         previousChange,
-        previousClose: currentPrice && previousChange ? currentPrice - previousChange : 0,
+        previousClose: currentPrice ? currentPrice - previousChange : 0,
         changeRate,
         investmentScore,
         scoreLabel: getScoreLabel(investmentScore),
@@ -101,16 +100,69 @@ export const toStockUiItem = (item: StockSearchItem): StockUiItem => {
     };
 };
 
+function normalizeText(value?: string | null) {
+    return (value ?? "").replace(/\s/g, "").toLowerCase();
+}
+
+function rankStock(item: StockUiItem, keyword: string) {
+    const target = normalizeText(keyword);
+    const name = normalizeText(item.stockName);
+    const code = normalizeText(item.stockCode);
+    const company = normalizeText(item.companyName);
+
+    if (!target) return 999;
+
+    if (code === target) return 0;
+    if (name === target) return 1;
+    if (name.startsWith(target)) return 2;
+    if (code.startsWith(target)) return 3;
+    if (company.startsWith(target)) return 4;
+    if (name.includes(target)) return 5;
+    if (company.includes(target)) return 6;
+    if (code.includes(target)) return 7;
+
+    return 99;
+}
+
+function refineStockList(items: StockSearchItem[], keyword: string): StockUiItem[] {
+    const seen = new Set<string>();
+
+    return items
+        .map(toStockUiItem)
+        .filter((item) => item.stockCode && item.stockCode !== "-")
+        .filter((item) => {
+            if (seen.has(item.stockCode)) return false;
+            seen.add(item.stockCode);
+            return true;
+        })
+        .sort((a, b) => rankStock(a, keyword) - rankStock(b, keyword))
+        .slice(0, 10);
+}
+
 export default function StockSearchPage() {
     const [keyword, setKeyword] = useState("");
+    const [submittedKeyword, setSubmittedKeyword] = useState("");
     const [selectedStockCode, setSelectedStockCode] = useState<string | null>(null);
 
-    const debouncedKeyword = useDebounce(keyword, 300);
-    const { data, isFetching } = useStockSearchQuery(debouncedKeyword, 20);
+    const searchedKeyword = submittedKeyword.trim();
+
+    const { data, isFetching } = useStockSearchQuery(searchedKeyword, 20);
 
     const stockList = useMemo(() => {
-        return (data?.items ?? []).map(toStockUiItem);
-    }, [data]);
+        if (!searchedKeyword) return [];
+        return refineStockList(data?.items ?? [], searchedKeyword);
+    }, [data, searchedKeyword]);
+
+    const relatedKeywords = useMemo(() => {
+        if (!searchedKeyword) {
+            return [...RECENT_KEYWORDS, ...TRENDING_KEYWORDS].slice(0, 5);
+        }
+
+        return stockList
+            .map((item) => item.stockName)
+            .filter((name) => name && name !== "-")
+            .slice(0, 5);
+    }, [searchedKeyword, stockList]);
 
     useEffect(() => {
         if (!stockList.length) {
@@ -122,6 +174,7 @@ export default function StockSearchPage() {
             if (prev && stockList.some((item) => item.stockCode === prev)) {
                 return prev;
             }
+
             return stockList[0].stockCode;
         });
     }, [stockList]);
@@ -129,7 +182,29 @@ export default function StockSearchPage() {
     const selectedStock =
         stockList.find((item) => item.stockCode === selectedStockCode) ?? stockList[0] ?? null;
 
-    const hasKeyword = keyword.trim().length > 0;
+    const hasSubmittedKeyword = searchedKeyword.length > 0;
+
+    const submitSearch = (nextKeyword?: string) => {
+        const value = (nextKeyword ?? keyword).trim();
+
+        if (!value) {
+            setSubmittedKeyword("");
+            setSelectedStockCode(null);
+            return;
+        }
+
+        setKeyword(value);
+        setSubmittedKeyword(value);
+    };
+
+    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        submitSearch();
+    };
+
+    const handleClickKeyword = (value: string) => {
+        submitSearch(value);
+    };
 
     return (
         <Box className="stock-search-page">
@@ -150,13 +225,34 @@ export default function StockSearchPage() {
                 </header>
 
                 <section className="stock-search-panel">
-                    <SearchHeaderSection
-                        keyword={keyword}
-                        trendingKeywords={TRENDING_KEYWORDS}
-                        recentKeywords={RECENT_KEYWORDS}
-                        onChangeKeyword={setKeyword}
-                        onClickKeyword={setKeyword}
-                    />
+                    <form onSubmit={handleSubmit} className="stock-search-input-form">
+                        <SearchHeaderSection
+                            keyword={keyword}
+                            trendingKeywords={[]}
+                            recentKeywords={[]}
+                            onChangeKeyword={setKeyword}
+                            onClickKeyword={handleClickKeyword}
+                        />
+                    </form>
+
+                    <div className="related-keyword-area">
+                        <div className="related-keyword-area__title">
+                            {hasSubmittedKeyword ? "연관검색어" : "추천검색어"}
+                        </div>
+
+                        <div className="related-keyword-area__list">
+                            {relatedKeywords.map((item) => (
+                                <button
+                                    key={item}
+                                    type="button"
+                                    className="related-keyword-chip"
+                                    onClick={() => handleClickKeyword(item)}
+                                >
+                                    {item}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </section>
 
                 {selectedStock && (
@@ -219,16 +315,16 @@ export default function StockSearchPage() {
                         <div>
                             <strong>검색 결과</strong>
                             <p>
-                                {hasKeyword
+                                {hasSubmittedKeyword
                                     ? `${stockList.length}개 종목이 검색되었습니다`
-                                    : "종목명이나 종목코드를 입력해보세요"}
+                                    : "종목명이나 종목코드를 입력 후 Enter를 눌러보세요"}
                             </p>
                         </div>
                     </div>
 
                     <SearchResultSection
                         stockList={stockList}
-                        selectedStockId={selectedStock?.id ?? null}
+                        selectedStockId={selectedStock?.stockCode ?? null}
                         onSelectStock={(stock) => setSelectedStockCode(String(stock.stockCode))}
                     />
                 </section>

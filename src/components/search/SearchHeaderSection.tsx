@@ -1,7 +1,6 @@
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
-import LocalFireDepartmentRoundedIcon from "@mui/icons-material/LocalFireDepartmentRounded";
-import { Box, Chip, Paper, TextField, Typography } from "@mui/material";
+import KeyboardReturnRoundedIcon from "@mui/icons-material/KeyboardReturnRounded";
+import { Box, TextField } from "@mui/material";
 
 interface Props {
     keyword: string;
@@ -13,64 +12,36 @@ interface Props {
 
 export default function SearchHeaderSection({
                                                 keyword,
-                                                trendingKeywords,
-                                                recentKeywords,
                                                 onChangeKeyword,
-                                                onClickKeyword,
                                             }: Props) {
     return (
         <Box className="search-header-section">
-            <Paper elevation={0} className="search-input-card">
+            <Box className="search-input-card">
                 <Box className="search-input-card__row">
-                    <SearchRoundedIcon className="search-input-card__icon" />
+                    <Box className="search-input-card__icon-box">
+                        <SearchRoundedIcon className="search-input-card__icon" />
+                    </Box>
+
                     <TextField
                         fullWidth
                         variant="standard"
-                        placeholder="예: 삼성전자, 005930, SK하이닉스"
+                        placeholder="종목명 또는 종목코드 검색"
                         value={keyword}
                         onChange={(e) => onChangeKeyword(e.target.value)}
                         InputProps={{
                             disableUnderline: true,
                         }}
+                        inputProps={{
+                            className: "search-input-card__input",
+                        }}
                     />
-                </Box>
-            </Paper>
 
-            <Paper elevation={0} className="keyword-card">
-                <Box className="keyword-card__title-row">
-                    <LocalFireDepartmentRoundedIcon fontSize="small" />
-                    <Typography className="keyword-card__title">인기 검색어</Typography>
+                    <Box className="search-input-card__enter">
+                        <KeyboardReturnRoundedIcon fontSize="small" />
+                        <span>Enter</span>
+                    </Box>
                 </Box>
-
-                <Box className="keyword-card__chip-wrap">
-                    {trendingKeywords.map((item) => (
-                        <Chip
-                            key={item}
-                            label={item}
-                            onClick={() => onClickKeyword(item)}
-                            className="keyword-card__chip"
-                        />
-                    ))}
-                </Box>
-            </Paper>
-
-            <Paper elevation={0} className="keyword-card">
-                <Box className="keyword-card__title-row">
-                    <HistoryRoundedIcon fontSize="small" />
-                    <Typography className="keyword-card__title">최근 검색</Typography>
-                </Box>
-
-                <Box className="keyword-card__chip-wrap">
-                    {recentKeywords.map((item) => (
-                        <Chip
-                            key={item}
-                            label={item}
-                            onClick={() => onClickKeyword(item)}
-                            className="keyword-card__chip"
-                        />
-                    ))}
-                </Box>
-            </Paper>
+            </Box>
         </Box>
     );
 }

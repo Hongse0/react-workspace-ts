@@ -1,11 +1,33 @@
-import { Box, Chip, Paper, Typography } from "@mui/material";
-import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
+import { Box, Paper, Typography } from "@mui/material";
 import type { StockItem } from "../../pages/search/types";
 
 interface Props {
     stockList: StockItem[];
     selectedStockId: string | null;
     onSelectStock: (stock: StockItem) => void;
+}
+
+function formatPrice(value?: number | null) {
+    if (!value) return "-";
+    return value.toLocaleString("ko-KR");
+}
+
+function formatRate(value?: number | null) {
+    const rate = Number(value ?? 0);
+
+    if (rate > 0) return `+${rate.toFixed(2)}%`;
+    if (rate < 0) return `${rate.toFixed(2)}%`;
+
+    return "0.00%";
+}
+
+function getRateClass(value?: number | null) {
+    const rate = Number(value ?? 0);
+
+    if (rate > 0) return "is-rise";
+    if (rate < 0) return "is-fall";
+
+    return "is-flat";
 }
 
 export default function SearchResultSection({
@@ -15,15 +37,6 @@ export default function SearchResultSection({
                                             }: Props) {
     return (
         <Box className="search-result-section">
-            <Box className="search-result-section__header">
-                <Typography className="search-result-section__title">
-                    검색 결과
-                </Typography>
-                <Typography className="search-result-section__count">
-                    총 {stockList.length}개
-                </Typography>
-            </Box>
-
             <Box className="search-result-section__list">
                 {stockList.length === 0 ? (
                     <Paper elevation={0} className="search-empty-card">
@@ -31,72 +44,37 @@ export default function SearchResultSection({
                             검색 결과가 없습니다
                         </Typography>
                         <Typography className="search-empty-card__desc">
-                            종목명이나 종목코드를 다시 입력해보세요
+                            종목명이나 종목코드를 입력하고 Enter를 눌러보세요
                         </Typography>
                     </Paper>
                 ) : (
                     stockList.map((item) => {
-                        const isSelected = item.id === selectedStockId;
-                        const price = item.price ?? 0;
-                        const changeRate = item.changeRate ?? 0;
+                        const isSelected = item.stockCode === selectedStockId;
+                        const rateClass = getRateClass(item.changeRate);
 
                         return (
-                            <Paper
-                                key={item.id}
-                                elevation={0}
-                                className={`stock-result-card ${isSelected ? "is-selected" : ""}`}
+                            <button
+                                key={item.stockCode}
+                                type="button"
+                                className={`stock-result-row ${isSelected ? "is-selected" : ""}`}
                                 onClick={() => onSelectStock(item)}
                             >
-                                <Box className="stock-result-card__top">
-                                    <Box className="stock-result-card__left">
-                                        <Typography className="stock-result-card__name">
-                                            {item.stockName}
-                                        </Typography>
+                                <div className="stock-result-row__left">
+                                    <strong>{item.stockName}</strong>
+                                    <span>
+                                        {item.stockCode} · {item.market}
+                                    </span>
+                                </div>
 
-                                        <Box className="stock-result-card__meta">
-                                            <Chip
-                                                label={item.market}
-                                                size="small"
-                                                className="stock-result-card__market"
-                                            />
-                                            <Typography className="stock-result-card__code">
-                                                {item.stockCode}
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-
-                                    <Box className="stock-result-card__price-wrap">
-                                        <Typography className="stock-result-card__price">
-                                            ₩{price.toLocaleString("ko-KR")}
-                                        </Typography>
-                                        <Typography
-                                            className={`stock-result-card__change ${
-                                                changeRate >= 0 ? "up" : "down"
-                                            }`}
-                                        >
-                                            <TrendingUpRoundedIcon sx={{ fontSize: 14 }} />
-                                            {changeRate > 0 ? "+" : ""}
-                                            {changeRate}%
-                                        </Typography>
-                                    </Box>
-                                </Box>
-
-                                <Typography className="stock-result-card__company">
-                                    {item.companyName}
-                                </Typography>
-
-                                <Typography className="stock-result-card__description">
-                                    {item.description ?? ""}
-                                </Typography>
-
-                                <Box className="stock-result-card__tag-wrap">
-                                    {(item.tags ?? []).map((tag) => (
-                                        <span key={tag} className="stock-result-card__tag">
-                                            #{tag}
-                                        </span>
-                                    ))}
-                                </Box>
-                            </Paper>
+                                <div className="stock-result-row__right">
+                                    <strong>
+                                        {formatPrice(item.price)}
+                                    </strong>
+                                    <span className={rateClass}>
+                                        {formatRate(item.changeRate)}
+                                    </span>
+                                </div>
+                            </button>
                         );
                     })
                 )}
