@@ -18,6 +18,7 @@ export interface StockSearchItem {
     corpNm: string | null;
     activeYn: string | null;
     basDt: string | null;
+    currentPrice: number | null;
 }
 
 export interface StockSearchResult {
@@ -43,7 +44,9 @@ export class StockSearchService extends BaseAPIService implements StockSearchV1 
     }
 
     autocomplete(q: string, size = 10) {
-        return this.get<StockSearchResult>(`/autocomplete?q=${encodeURIComponent(q)}&size=${size}`);
+        return this.get<StockSearchResult>(
+            `/autocomplete?q=${encodeURIComponent(q)}&size=${size}`
+        );
     }
 
     getBySrtnCd(srtnCd: string) {
