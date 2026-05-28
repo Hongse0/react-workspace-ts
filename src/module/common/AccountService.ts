@@ -3,12 +3,15 @@ import type { ServerResponse } from "../api/Types";
 
 export interface AccountSelectItem {
     accountId: number;
-    memberId: number;
+    memberId?: number;
     brokerName: string;
     accountNumber: string;
     accountName?: string;
     baseCurrency: string;
-    cashBalance: string;
+    cashBalance: number;
+    stockAssetValue: number;
+    totalAssetValue: number;
+    holdingCount: number;
     createdAt: string;
 }
 
@@ -41,6 +44,9 @@ export interface AccountCashRequest {
 export interface AccountCashResponse {
     accountId: number;
     cashBalance: number;
+    stockAssetValue: number;
+    totalAssetValue: number;
+    holdingCount: number;
 }
 
 export type AccountResponse = AccountSelectItem;
@@ -48,16 +54,11 @@ export type AccountResponse = AccountSelectItem;
 export interface AccountV1 {
     registerAccount(body: AccountCreateRequest): Promise<ServerResponse<AccountResponse>>;
     selectAll(): Promise<ServerResponse<AccountSelectItem[]>>;
+    selectAccount(accountId: number): Promise<ServerResponse<AccountSelectItem>>;
     selectHoldings(accountId: number): Promise<ServerResponse<AccountHoldingItem[]>>;
     deleteAccount(accountId: number): Promise<ServerResponse<null>>;
-    depositCash(
-        accountId: number,
-        body: AccountCashRequest
-    ): Promise<ServerResponse<AccountCashResponse>>;
-    withdrawCash(
-        accountId: number,
-        body: AccountCashRequest
-    ): Promise<ServerResponse<AccountCashResponse>>;
+    depositCash(accountId: number, body: AccountCashRequest): Promise<ServerResponse<AccountCashResponse>>;
+    withdrawCash(accountId: number, body: AccountCashRequest): Promise<ServerResponse<AccountCashResponse>>;
 }
 
 export class AccountService extends BaseAPIService implements AccountV1 {
@@ -99,5 +100,10 @@ export class AccountService extends BaseAPIService implements AccountV1 {
             `/${accountId}/cash/withdraw`,
             body
         );
+    }
+
+    /** 계좌 단건 조회 */
+    selectAccount(accountId: number) {
+        return this.get<AccountSelectItem>(`/${accountId}`);
     }
 }
