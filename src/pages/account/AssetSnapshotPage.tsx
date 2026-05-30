@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Box, Container, Typography } from "@mui/material";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
@@ -12,11 +12,31 @@ import { useNavigate } from "react-router-dom";
 import "./style.css";
 
 import { useAssetSnapshotHistoryQuery } from "../../services/snapshot/useAssetSnapshotHistoryQuery";
+import { useWeeklyAssetSnapshotHistoryQuery } from "../../services/snapshot/useWeeklyAssetSnapshotHistoryQuery";
 
 type SnapshotViewType = "MONTHLY" | "WEEKLY";
 
 type AssetSnapshotMonthlyItem = {
     snapshotYm: string;
+    cashBalance?: string | number | null;
+    stockEvaluationAmount?: string | number | null;
+    totalAssetValue?: string | number | null;
+    holdingCount?: number | null;
+};
+
+type AssetSnapshotWeeklyItem = {
+    snapshotDate: string;
+    cashBalance?: string | number | null;
+    stockEvaluationAmount?: string | number | null;
+    totalAssetValue?: string | number | null;
+    holdingCount?: number | null;
+};
+
+type AssetSnapshotViewItem = {
+    periodKey: string;
+    periodLabel: string;
+    chartLabel: string;
+    yearLabel: string;
     cashBalance?: string | number | null;
     stockEvaluationAmount?: string | number | null;
     totalAssetValue?: string | number | null;
@@ -54,43 +74,100 @@ const formatPercent = (value: number) => {
     return `${sign}${value.toFixed(1)}%`;
 };
 
+const toMonthlyViewItem = (item: AssetSnapshotMonthlyItem): AssetSnapshotViewItem => {
+    return {
+        periodKey: item.snapshotYm,
+        periodLabel: item.snapshotYm,
+        chartLabel: item.snapshotYm.slice(5),
+        yearLabel: `${item.snapshotYm.slice(2, 4)}년`,
+        cashBalance: item.cashBalance,
+        stockEvaluationAmount: item.stockEvaluationAmount,
+        totalAssetValue: item.totalAssetValue,
+        holdingCount: item.holdingCount,
+    };
+};
+
+const toWeeklyViewItem = (item: AssetSnapshotWeeklyItem): AssetSnapshotViewItem => {
+    const date = item.snapshotDate; // YYYY-MM-DD
+    const month = date.slice(5, 7);
+    const day = date.slice(8, 10);
+
+    return {
+        periodKey: date,
+        periodLabel: date,
+        chartLabel: `${month}/${day}`,
+        yearLabel: `${date.slice(2, 4)}년`,
+        cashBalance: item.cashBalance,
+        stockEvaluationAmount: item.stockEvaluationAmount,
+        totalAssetValue: item.totalAssetValue,
+        holdingCount: item.holdingCount,
+    };
+};
+
 export default function AssetSnapshotPage() {
     const [viewType, setViewType] = useState<SnapshotViewType>("MONTHLY");
+    const [selectedPeriodKey, setSelectedPeriodKey] = useState<string | null>(null);
 
     const navigate = useNavigate();
 
     const {
-        data: snapshotHistory,
-        isLoading,
-        isError,
+        data: monthlySnapshotHistory,
+        isLoading: isMonthlyLoading,
+        isError: isMonthlyError,
     } = useAssetSnapshotHistoryQuery(12);
 
-    const [selectedSnapshotYm, setSelectedSnapshotYm] = useState<string | null>(null);
+    const {
+        data: weeklySnapshotHistory,
+        isLoading: isWeeklyLoading,
+        isError: isWeeklyError,
+    } = useWeeklyAssetSnapshotHistoryQuery(12, viewType === "WEEKLY");
 
-    const snapshotItems = useMemo<AssetSnapshotMonthlyItem[]>(() => {
-        if (!snapshotHistory || !Array.isArray(snapshotHistory.items)) {
+    useEffect(() => {
+        setSelectedPeriodKey(null);
+    }, [viewType]);
+
+    const snapshotItems = useMemo<AssetSnapshotViewItem[]>(() => {
+        if (viewType === "MONTHLY") {
+            if (!monthlySnapshotHistory || !Array.isArray(monthlySnapshotHistory.items)) {
+                return [];
+            }
+
+            return (monthlySnapshotHistory.items as AssetSnapshotMonthlyItem[]).map(
+                toMonthlyViewItem
+            );
+        }
+
+        if (!weeklySnapshotHistory || !Array.isArray(weeklySnapshotHistory.items)) {
             return [];
         }
 
-        return snapshotHistory.items as AssetSnapshotMonthlyItem[];
-    }, [snapshotHistory]);
+        return (weeklySnapshotHistory.items as AssetSnapshotWeeklyItem[]).map(
+            toWeeklyViewItem
+        );
+    }, [viewType, monthlySnapshotHistory, weeklySnapshotHistory]);
 
-    const latestSnapshot = useMemo<AssetSnapshotMonthlyItem | null>(() => {
+    const isLoading = viewType === "MONTHLY" ? isMonthlyLoading : isWeeklyLoading;
+    const isError = viewType === "MONTHLY" ? isMonthlyError : isWeeklyError;
+
+    const latestSnapshot = useMemo<AssetSnapshotViewItem | null>(() => {
         if (snapshotItems.length === 0) return null;
         return snapshotItems[snapshotItems.length - 1];
     }, [snapshotItems]);
 
-    const selectedSnapshot = useMemo<AssetSnapshotMonthlyItem | null>(() => {
+    const selectedSnapshot = useMemo<AssetSnapshotViewItem | null>(() => {
         if (snapshotItems.length === 0) return null;
 
-        if (!selectedSnapshotYm) {
+        if (!selectedPeriodKey) {
             return latestSnapshot;
         }
 
-        return snapshotItems.find((item) => item.snapshotYm === selectedSnapshotYm) ?? latestSnapshot;
-    }, [snapshotItems, selectedSnapshotYm, latestSnapshot]);
+        return (
+            snapshotItems.find((item) => item.periodKey === selectedPeriodKey) ??
+            latestSnapshot
+        );
+    }, [snapshotItems, selectedPeriodKey, latestSnapshot]);
 
-    const firstSnapshot = useMemo<AssetSnapshotMonthlyItem | null>(() => {
+    const firstSnapshot = useMemo<AssetSnapshotViewItem | null>(() => {
         if (snapshotItems.length === 0) return null;
         return snapshotItems[0];
     }, [snapshotItems]);
@@ -115,12 +192,20 @@ export default function AssetSnapshotPage() {
     }, [latestSnapshot, firstSnapshot, assetGrowthAmount]);
 
     const maxSnapshotAsset = useMemo(() => {
-        const max = snapshotItems.reduce((maxValue: number, item: AssetSnapshotMonthlyItem) => {
+        const max = snapshotItems.reduce((maxValue, item) => {
             return Math.max(maxValue, toNumber(item.totalAssetValue));
         }, 0);
 
         return max <= 0 ? 1 : max;
     }, [snapshotItems]);
+
+    const periodTitle = viewType === "MONTHLY" ? "12개월 추이" : "최근 12주 추이";
+    const periodDescription =
+        viewType === "MONTHLY" ? "월별 총자산 기준" : "주별 총자산 기준";
+    const emptyDescription =
+        viewType === "MONTHLY"
+            ? "스냅샷을 생성하면 월별 자산 변화를 확인할 수 있어요."
+            : "스냅샷을 생성하면 주별 자산 변화를 확인할 수 있어요.";
 
     return (
         <Box className="asset-snapshot-page">
@@ -165,16 +250,7 @@ export default function AssetSnapshotPage() {
                     </button>
                 </section>
 
-                {viewType === "WEEKLY" ? (
-                    <section className="asset-snapshot-ready-card">
-                        <ViewWeekRoundedIcon />
-                        <strong>주별 자산 변화는 준비 중입니다</strong>
-                        <p>
-                            아직 주별 스냅샷 API가 없어서 화면만 먼저 구성했습니다.
-                            이후 주별 API가 생기면 이 영역에 주간 그래프를 연결하면 됩니다.
-                        </p>
-                    </section>
-                ) : isLoading ? (
+                {isLoading ? (
                     <section className="asset-snapshot-state-card">
                         자산 변화를 불러오는 중...
                     </section>
@@ -186,7 +262,7 @@ export default function AssetSnapshotPage() {
                     <section className="asset-snapshot-empty-card">
                         <ShowChartRoundedIcon />
                         <strong>아직 자산 스냅샷이 없습니다</strong>
-                        <p>스냅샷을 생성하면 월별 자산 변화를 확인할 수 있어요.</p>
+                        <p>{emptyDescription}</p>
                     </section>
                 ) : (
                     <>
@@ -195,9 +271,11 @@ export default function AssetSnapshotPage() {
                                 <div>
                                     <span>최근 총자산</span>
                                     <strong>
-                                        {formatCurrency(toNumber(latestSnapshot?.totalAssetValue))}
+                                        {formatCurrency(
+                                            toNumber(latestSnapshot?.totalAssetValue)
+                                        )}
                                     </strong>
-                                    <p>{latestSnapshot?.snapshotYm} 기준</p>
+                                    <p>{latestSnapshot?.periodLabel} 기준</p>
                                 </div>
 
                                 <div className="asset-snapshot-hero-card__icon">
@@ -225,12 +303,12 @@ export default function AssetSnapshotPage() {
 
                         <section className="asset-snapshot-chart-card">
                             <div className="asset-snapshot-section-title">
-                                <strong>12개월 추이</strong>
-                                <span>월별 총자산 기준</span>
+                                <strong>{periodTitle}</strong>
+                                <span>{periodDescription}</span>
                             </div>
 
                             <div className="asset-snapshot-chart">
-                                {snapshotItems.map((item: AssetSnapshotMonthlyItem) => {
+                                {snapshotItems.map((item) => {
                                     const total = toNumber(item.totalAssetValue);
                                     const cash = toNumber(item.cashBalance);
                                     const stock = toNumber(item.stockEvaluationAmount);
@@ -240,14 +318,14 @@ export default function AssetSnapshotPage() {
                                     return (
                                         <div
                                             className={
-                                                selectedSnapshot?.snapshotYm === item.snapshotYm
+                                                selectedSnapshot?.periodKey === item.periodKey
                                                     ? "asset-snapshot-chart__item is-selected"
                                                     : "asset-snapshot-chart__item"
                                             }
-                                            key={item.snapshotYm}
-                                            title={`${item.snapshotYm} 총자산 ${formatCurrency(total)}`}
-                                            onMouseEnter={() => setSelectedSnapshotYm(item.snapshotYm)}
-                                            onClick={() => setSelectedSnapshotYm(item.snapshotYm)}
+                                            key={item.periodKey}
+                                            title={`${item.periodLabel} 총자산 ${formatCurrency(total)}`}
+                                            onMouseEnter={() => setSelectedPeriodKey(item.periodKey)}
+                                            onClick={() => setSelectedPeriodKey(item.periodKey)}
                                         >
                                             <div className="asset-snapshot-chart__value">
                                                 {formatCompactCurrency(total)}
@@ -259,7 +337,7 @@ export default function AssetSnapshotPage() {
                                                     style={{ height: `${height}%` }}
                                                 >
                                                     <div className="asset-snapshot-chart__tooltip">
-                                                        <strong>{item.snapshotYm}</strong>
+                                                        <strong>{item.periodLabel}</strong>
                                                         <span>총자산 {formatCurrency(total)}</span>
                                                         <span>현금 {formatCurrency(cash)}</span>
                                                         <span>주식 {formatCurrency(stock)}</span>
@@ -267,32 +345,47 @@ export default function AssetSnapshotPage() {
                                                 </div>
                                             </div>
 
-                                            <p>{item.snapshotYm.slice(5)}</p>
-                                            <small>{item.snapshotYm.slice(2, 4)}년</small>
+                                            <p>{item.chartLabel}</p>
+                                            <small>{item.yearLabel}</small>
                                         </div>
                                     );
                                 })}
                             </div>
+
                             {selectedSnapshot && (
                                 <div className="asset-snapshot-selected-card">
                                     <div>
                                         <span>선택한 기간</span>
-                                        <strong>{selectedSnapshot.snapshotYm}</strong>
+                                        <strong>{selectedSnapshot.periodLabel}</strong>
                                     </div>
 
                                     <div>
                                         <span>총자산</span>
-                                        <strong>{formatCurrency(toNumber(selectedSnapshot.totalAssetValue))}</strong>
+                                        <strong>
+                                            {formatCurrency(
+                                                toNumber(selectedSnapshot.totalAssetValue)
+                                            )}
+                                        </strong>
                                     </div>
 
                                     <div>
                                         <span>현금</span>
-                                        <strong>{formatCurrency(toNumber(selectedSnapshot.cashBalance))}</strong>
+                                        <strong>
+                                            {formatCurrency(
+                                                toNumber(selectedSnapshot.cashBalance)
+                                            )}
+                                        </strong>
                                     </div>
 
                                     <div>
                                         <span>주식 평가</span>
-                                        <strong>{formatCurrency(toNumber(selectedSnapshot.stockEvaluationAmount))}</strong>
+                                        <strong>
+                                            {formatCurrency(
+                                                toNumber(
+                                                    selectedSnapshot.stockEvaluationAmount
+                                                )
+                                            )}
+                                        </strong>
                                     </div>
                                 </div>
                             )}
@@ -301,7 +394,7 @@ export default function AssetSnapshotPage() {
                         <section className="asset-snapshot-breakdown-card">
                             <div className="asset-snapshot-section-title">
                                 <strong>최근 자산 구성</strong>
-                                <span>{latestSnapshot?.snapshotYm} 기준</span>
+                                <span>{latestSnapshot?.periodLabel} 기준</span>
                             </div>
 
                             <div className="asset-snapshot-breakdown-list">
@@ -312,7 +405,9 @@ export default function AssetSnapshotPage() {
                                     <div>
                                         <span>현금</span>
                                         <strong>
-                                            {formatCurrency(toNumber(latestSnapshot?.cashBalance))}
+                                            {formatCurrency(
+                                                toNumber(latestSnapshot?.cashBalance)
+                                            )}
                                         </strong>
                                     </div>
                                 </div>
@@ -325,7 +420,9 @@ export default function AssetSnapshotPage() {
                                         <span>주식 평가</span>
                                         <strong>
                                             {formatCurrency(
-                                                toNumber(latestSnapshot?.stockEvaluationAmount)
+                                                toNumber(
+                                                    latestSnapshot?.stockEvaluationAmount
+                                                )
                                             )}
                                         </strong>
                                     </div>
@@ -338,7 +435,9 @@ export default function AssetSnapshotPage() {
                                     <div>
                                         <span>총자산</span>
                                         <strong>
-                                            {formatCurrency(toNumber(latestSnapshot?.totalAssetValue))}
+                                            {formatCurrency(
+                                                toNumber(latestSnapshot?.totalAssetValue)
+                                            )}
                                         </strong>
                                     </div>
                                 </div>

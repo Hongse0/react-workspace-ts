@@ -1,6 +1,7 @@
 import BaseAPIService from "../api/BaseAPIService";
 import type { ServerResponse } from "../api/Types";
 import type { AssetSnapshotHistoryResponse } from "../../services/snapshot/snapshot.types";
+import type {AssetSnapshotWeeklyItem} from "../../services/snapshot/useWeeklyAssetSnapshotHistoryQuery.ts";
 
 export interface SnapshotV1 {
     getMonthlyHistory(months?: number): Promise<ServerResponse<AssetSnapshotHistoryResponse>>;
@@ -28,5 +29,14 @@ export class SnapshotService extends BaseAPIService implements SnapshotV1 {
             memberId,
             months,
         });
+    }
+
+    /**
+     * 주간 자산 스냅샷 조회
+     */
+    selectWeeklyHistory(size: number) {
+        return this.get<AssetSnapshotHistoryResponse<AssetSnapshotWeeklyItem>>(
+            `/weekly?size=${size}`
+        );
     }
 }
