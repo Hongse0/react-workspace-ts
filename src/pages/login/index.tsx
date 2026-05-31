@@ -94,7 +94,7 @@ const LoginPage = () => {
                 password: pw,
             });
 
-            login(result.accessToken);
+            login(result.accessToken, result.nickname);
 
             const state = (location.state as LocationState) ?? {};
             navigate(state.from ?? '/', { replace: true });

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import "./style.css";
 import { useDashboardHoldingsQuery } from "../../services/dashboard/useDashboardHoldingsQuery";
+import { useAuthStore } from "../../store/auto/useAuthStore";
 
 type TabType = "dashboard" | "trade";
 
@@ -39,6 +40,7 @@ function getProfitClass(value: number): string {
 
 export default function HomePage() {
     const [selectedTab, setSelectedTab] = useState<TabType>("dashboard");
+    const nickname = useAuthStore((s) => s.nickname);
 
     const {
         data: dashboard,
@@ -84,7 +86,9 @@ export default function HomePage() {
     return (
         <div className="home-page">
             <section className="dashboard-hero">
-                <div className="hero-greeting">안녕하세요, 홍세영님</div>
+                <div className="hero-greeting">
+                    안녕하세요, {nickname ?? "회원"}님
+                </div>
                 <div className="hero-title">내 투자 대시보드</div>
 
                 <div className="hero-amount">

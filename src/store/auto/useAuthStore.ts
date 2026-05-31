@@ -4,9 +4,10 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 type AuthState = {
     isAuthed: boolean;
     accessToken: string | null;
+    nickname: string | null;
     hasHydrated: boolean;
     setHasHydrated: (v: boolean) => void;
-    login: (token: string) => void;
+    login: (token: string, nickname: string) => void;
     logout: () => void;
 };
 
@@ -26,20 +27,23 @@ export const useAuthStore = create<AuthState>()(
         (set) => ({
             isAuthed: false,
             accessToken: null,
+            nickname: null,
             hasHydrated: false,
 
             setHasHydrated: (v) => set({ hasHydrated: v }),
 
-            login: (token) =>
+            login: (token, nickname) =>
                 set({
                     isAuthed: true,
                     accessToken: token,
+                    nickname,
                 }),
 
             logout: () =>
                 set({
                     isAuthed: false,
                     accessToken: null,
+                    nickname: null,
                 }),
         }),
         {
@@ -48,6 +52,7 @@ export const useAuthStore = create<AuthState>()(
 
             partialize: (s) => ({
                 accessToken: s.accessToken,
+                nickname: s.nickname,
             }),
 
             onRehydrateStorage: () => (state) => {
@@ -58,7 +63,7 @@ export const useAuthStore = create<AuthState>()(
                 if (expired) {
                     state.logout();
                 } else {
-                    state.login(state.accessToken!);
+                    state.login(state.accessToken!, state.nickname ?? '회원');
                 }
 
                 state.setHasHydrated(true);

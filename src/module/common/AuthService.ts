@@ -9,6 +9,7 @@ export type LoginRequest = {
 export type LoginResult = {
     accessToken: string;
     expiresIn: number;
+    nickname: string;
 };
 
 export type SignupRequest = {
