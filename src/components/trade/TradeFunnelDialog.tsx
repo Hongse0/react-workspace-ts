@@ -64,6 +64,7 @@ export type HoldingItem = {
     evaluationAmount?: number;
     profitLoss?: number;
     profitRate?: number;
+    rate?: number;
 };
 
 type Props = {
@@ -430,7 +431,7 @@ export default function TradeFunnelDialog({
                                 }}
                             >
                                 <ToggleButton value="KR">한국</ToggleButton>
-                                <ToggleButton value="US">미국</ToggleButton>
+                                {/*<ToggleButton value="US">미국</ToggleButton>*/}
                             </ToggleButtonGroup>
 
                             {market === "KR" ? (
@@ -525,7 +526,7 @@ export default function TradeFunnelDialog({
                                     {holdings.map((item) => {
                                         const isSelected = selectedHolding?.stockId === item.stockId;
                                         const qty = item.availableQuantity ?? item.quantity ?? 0;
-                                        const rate = item.profitRate ?? 0;
+                                        const rate = Number(item.profitRate ?? item.rate ?? 0);
                                         const profitColor = rate > 0 ? "#2563EB" : rate < 0 ? "#FF4D4F" : "#111827";
 
                                         return (

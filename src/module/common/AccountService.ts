@@ -32,9 +32,11 @@ export interface AccountHoldingItem {
     avgPrice: number;
     availableQuantity?: number;
     currentPrice?: number;
+    buyAmount?: number;
     evaluationAmount?: number;
     profitLoss?: number;
     profitRate?: number;
+    rate?: number;
 }
 
 export interface AccountCashRequest {
