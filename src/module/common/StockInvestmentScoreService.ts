@@ -41,11 +41,21 @@ export interface StockInvestmentScore {
     reasons: string[];
 }
 
-export interface StockInvestmentScoreV1 {
-    getInvestmentScore(srtnCd: string): Promise<ServerResponse<StockInvestmentScore>>;
+export interface SyncStockInvestmentScoreResult {
+    targetCount: number;
+    savedCount: number;
+    failCount: number;
 }
 
-export class StockInvestmentScoreService extends BaseAPIService implements StockInvestmentScoreV1 {
+export interface StockInvestmentScoreV1 {
+    getInvestmentScore(srtnCd: string): Promise<ServerResponse<StockInvestmentScore>>;
+    syncInvestmentScores(): Promise<ServerResponse<SyncStockInvestmentScoreResult>>;
+}
+
+export class StockInvestmentScoreService
+    extends BaseAPIService
+    implements StockInvestmentScoreV1
+{
     constructor(baseUrl: string) {
         super(baseUrl, "v1", "stocks");
     }
@@ -53,6 +63,13 @@ export class StockInvestmentScoreService extends BaseAPIService implements Stock
     getInvestmentScore(srtnCd: string) {
         return this.get<StockInvestmentScore>(
             `/${encodeURIComponent(srtnCd)}/investment-score`
+        );
+    }
+
+    syncInvestmentScores() {
+        return this.post<SyncStockInvestmentScoreResult, undefined>(
+            "/investment-scores/sync",
+            undefined
         );
     }
 }

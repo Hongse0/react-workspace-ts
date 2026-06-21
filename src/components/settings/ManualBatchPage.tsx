@@ -14,13 +14,14 @@ import StorageRoundedIcon from "@mui/icons-material/StorageRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import DatasetRoundedIcon from "@mui/icons-material/DatasetRounded";
 import SyncRoundedIcon from "@mui/icons-material/SyncRounded";
+import InsightsRoundedIcon from "@mui/icons-material/InsightsRounded";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     type BatchType,
+    type RunBatchResult,
     useRunStockBatchMutation,
 } from "../../services/settings/useRunStockBatchMutation.ts";
-import type { ManualBatchResult } from "../../module/common/StockBatchService";
 import "./manual-batch.css";
 
 interface BatchItem {
@@ -29,6 +30,7 @@ interface BatchItem {
     description: string;
     endpoint: string;
     icon: React.ReactNode;
+    useBasDt: boolean;
 }
 
 const BATCH_ITEMS: BatchItem[] = [
@@ -38,6 +40,7 @@ const BATCH_ITEMS: BatchItem[] = [
         description: "국내 주식 종목 마스터 데이터를 MySQL에 저장합니다.",
         endpoint: "POST /v1/stocks/sync/krx",
         icon: <StorageRoundedIcon />,
+        useBasDt: true,
     },
     {
         type: "STOCK_ES",
@@ -45,6 +48,7 @@ const BATCH_ITEMS: BatchItem[] = [
         description: "MySQL 종목 데이터를 Elasticsearch 검색 인덱스로 이관합니다.",
         endpoint: "POST /v1/stocks/sync/es",
         icon: <SearchRoundedIcon />,
+        useBasDt: false,
     },
     {
         type: "ETF",
@@ -52,6 +56,16 @@ const BATCH_ITEMS: BatchItem[] = [
         description: "ETF 종목 마스터 데이터를 MySQL에 저장합니다.",
         endpoint: "POST /v1/stocks/sync/etf",
         icon: <DatasetRoundedIcon />,
+        useBasDt: true,
+    },
+    {
+        type: "STOCK_INVESTMENT_SCORE",
+        title: "종목 투자 의견 점수 동기화",
+        description:
+            "가격 데이터 기반으로 종목별 투자점수, 의견 코드, 요약 사유를 계산하고 저장합니다.",
+        endpoint: "POST /v1/stocks/investment-scores/sync",
+        icon: <InsightsRoundedIcon />,
+        useBasDt: false,
     },
 ];
 
@@ -64,8 +78,30 @@ function getTodayBasDt() {
     return `${yyyy}${mm}${dd}`;
 }
 
-function formatBatchResult(result: ManualBatchResult) {
-    return `총 ${result.totalCount.toLocaleString()}건 / 저장 ${result.saved.toLocaleString()}건 / 페이지 ${result.totalPages.toLocaleString()}개`;
+function isInvestmentScoreSyncResult(
+    result: RunBatchResult
+): result is { targetCount: number; savedCount: number; failCount: number } {
+    return (
+        "targetCount" in result &&
+        "savedCount" in result &&
+        "failCount" in result
+    );
+}
+
+function formatBatchResult(result: RunBatchResult) {
+    if (isInvestmentScoreSyncResult(result)) {
+        return [
+            `대상 ${result.targetCount.toLocaleString()}건`,
+            `저장 ${result.savedCount.toLocaleString()}건`,
+            `실패 ${result.failCount.toLocaleString()}건`,
+        ].join(" / ");
+    }
+
+    return [
+        `총 ${(result.totalCount ?? 0).toLocaleString()}건`,
+        `저장 ${(result.saved ?? 0).toLocaleString()}건`,
+        `페이지 ${(result.totalPages ?? 0).toLocaleString()}개`,
+    ].join(" / ");
 }
 
 export default function ManualBatchPage() {
@@ -75,7 +111,7 @@ export default function ManualBatchPage() {
     const [runningType, setRunningType] = useState<BatchType | null>(null);
     const [lastResult, setLastResult] = useState<{
         title: string;
-        result: ManualBatchResult;
+        result: RunBatchResult;
     } | null>(null);
 
     const { mutateAsync, isPending, error } = useRunStockBatchMutation();
@@ -85,16 +121,18 @@ export default function ManualBatchPage() {
     }, [basDt]);
 
     const handleRunBatch = async (item: BatchItem) => {
-        if (normalizedBasDt && !/^\d{8}$/.test(normalizedBasDt)) {
+        if (item.useBasDt && normalizedBasDt && !/^\d{8}$/.test(normalizedBasDt)) {
             alert("기준일자는 YYYYMMDD 형식으로 입력해주세요. 예: 20260524");
             return;
         }
 
-        const ok = window.confirm(
-            `${item.title}를 실행할까요?\n\n기준일자: ${
+        const confirmMessage = item.useBasDt
+            ? `${item.title}를 실행할까요?\n\n기준일자: ${
                 normalizedBasDt || "서버 자동 계산"
             }`
-        );
+            : `${item.title}를 실행할까요?\n\n이 배치는 기준일자를 사용하지 않습니다.`;
+
+        const ok = window.confirm(confirmMessage);
 
         if (!ok) return;
 
@@ -104,7 +142,7 @@ export default function ManualBatchPage() {
 
             const result = await mutateAsync({
                 type: item.type,
-                basDt: normalizedBasDt || undefined,
+                basDt: item.useBasDt ? normalizedBasDt || undefined : undefined,
             });
 
             setLastResult({
@@ -138,7 +176,7 @@ export default function ManualBatchPage() {
                         </Typography>
 
                         <Typography className="manual-batch-header__desc">
-                            기준일자를 입력하고 주식/ETF 동기화 배치를 직접 실행할 수 있어요.
+                            기준일자를 입력하고 주식/ETF 동기화 및 투자점수 계산 배치를 직접 실행할 수 있어요.
                         </Typography>
                     </div>
                 </header>
@@ -157,7 +195,7 @@ export default function ManualBatchPage() {
                             maxLength: 8,
                             inputMode: "numeric",
                         }}
-                        helperText="비워두면 서버에서 기준일자를 자동 계산합니다. 직접 입력 시 YYYYMMDD 형식으로 입력하세요."
+                        helperText="비워두면 서버에서 기준일자를 자동 계산합니다. 투자 의견 점수 동기화 배치는 기준일자를 사용하지 않습니다."
                     />
                 </Paper>
 

@@ -10,6 +10,19 @@ export interface StockSearchRequest {
     fuzzy?: boolean;
 }
 
+export type InvestmentOpinion =
+    | "STRONG"
+    | "POSITIVE"
+    | "WATCH"
+    | "CAUTION"
+    | "AVOID";
+
+export interface StockInvestmentScoreSummary {
+    basDt: string | null;
+    totalScore: number | null;
+    opinion: InvestmentOpinion | null;
+}
+
 export interface StockSearchItem {
     srtnCd: string;
     isinCd: string | null;
@@ -21,6 +34,8 @@ export interface StockSearchItem {
     currentPrice: number | null;
     vs: number | null;
     fltRt: number | null;
+
+    investmentScore: StockInvestmentScoreSummary | null;
 }
 
 export interface StockSearchResult {

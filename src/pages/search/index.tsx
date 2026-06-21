@@ -1,12 +1,15 @@
 import { Box, Container, Typography } from "@mui/material";
-import {type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { StockItem } from "./types";
 import "./style.css";
 import SearchResultSection from "../../components/search/SearchResultSection.tsx";
 import SearchHeaderSection from "../../components/search/SearchHeaderSection.tsx";
 import { useStockSearchQuery } from "../../services/search/useStockSearchQuery";
-import type { StockSearchItem } from "../../module/common/StockSearchService";
-import {useNavigate} from "react-router-dom";
+import type {
+    InvestmentOpinion,
+    StockSearchItem,
+} from "../../module/common/StockSearchService";
 
 const TRENDING_KEYWORDS = ["삼성전자", "SK하이닉스", "ETF", "반도체", "2차전지"];
 const RECENT_KEYWORDS = ["NAVER", "카카오", "TIGER"];
@@ -16,6 +19,8 @@ type StockUiItem = StockItem & {
     previousClose: number;
     investmentScore: number;
     scoreLabel: string;
+    opinion: InvestmentOpinion | null;
+    investmentScoreBaseDate: string | null;
     baseDate: string | null;
 };
 
@@ -42,36 +47,30 @@ function getStockColorClass(value: number): string {
     return "is-flat";
 }
 
-function calculateInvestmentScore(item: StockSearchItem): number {
-    const activeScore = item.activeYn === "Y" ? 35 : 20;
-    const marketScore = item.mrktCtg === "KOSPI" ? 25 : item.mrktCtg === "KOSDAQ" ? 20 : 15;
-
-    const rate = Number(item.fltRt ?? 0);
-
-    const momentumScore =
-        rate >= 5 ? 25 :
-            rate >= 2 ? 20 :
-                rate >= 0 ? 15 :
-                    rate >= -3 ? 10 :
-                        6;
-
-    const dataScore = item.basDt ? 15 : 8;
-
-    return Math.min(100, activeScore + marketScore + momentumScore + dataScore);
-}
-
-function getScoreLabel(score: number): string {
-    if (score >= 85) return "관심 높음";
-    if (score >= 70) return "양호";
-    if (score >= 55) return "보통";
-    return "주의";
+function getScoreLabelByOpinion(opinion?: InvestmentOpinion | null): string {
+    switch (opinion) {
+        case "STRONG":
+            return "매우 긍정";
+        case "POSITIVE":
+            return "긍정";
+        case "WATCH":
+            return "관심";
+        case "CAUTION":
+            return "주의";
+        case "AVOID":
+            return "회피";
+        default:
+            return "데이터 부족";
+    }
 }
 
 export const toStockUiItem = (item: StockSearchItem): StockUiItem => {
     const currentPrice = Number(item.currentPrice ?? 0);
     const previousChange = Number(item.vs ?? 0);
     const changeRate = Number(item.fltRt ?? 0);
-    const investmentScore = calculateInvestmentScore(item);
+
+    const opinion = item.investmentScore?.opinion ?? null;
+    const investmentScore = item.investmentScore?.totalScore ?? 0;
 
     return {
         id: item.srtnCd,
@@ -83,8 +82,12 @@ export const toStockUiItem = (item: StockSearchItem): StockUiItem => {
         previousChange,
         previousClose: currentPrice ? currentPrice - previousChange : 0,
         changeRate,
+
         investmentScore,
-        scoreLabel: getScoreLabel(investmentScore),
+        scoreLabel: getScoreLabelByOpinion(opinion),
+        opinion,
+        investmentScoreBaseDate: item.investmentScore?.basDt ?? null,
+
         baseDate: item.basDt ?? null,
         tags: [item.mrktCtg ?? "국내주식"].filter(Boolean),
         description: item.corpNm ?? "",
@@ -131,6 +134,8 @@ function refineStockList(items: StockSearchItem[], keyword: string): StockUiItem
 }
 
 export default function StockSearchPage() {
+    const navigate = useNavigate();
+
     const [keyword, setKeyword] = useState("");
     const [submittedKeyword, setSubmittedKeyword] = useState("");
     const [selectedStockCode, setSelectedStockCode] = useState<string | null>(null);
@@ -197,7 +202,9 @@ export default function StockSearchPage() {
         submitSearch(value);
     };
 
-    const navigate = useNavigate();
+    const moveToInvestmentScorePage = (stockCode: string) => {
+        navigate(`/market/${encodeURIComponent(stockCode)}/investment-score`);
+    };
 
     return (
         <Box className="stock-search-page">
@@ -253,15 +260,11 @@ export default function StockSearchPage() {
                         className="selected-stock-card"
                         role="button"
                         tabIndex={0}
-                        onClick={() => {
-                            if (!selectedStock) return;
-                            navigate(`/market/${encodeURIComponent(selectedStock.stockCode)}/investment-score`);
-                        }}
+                        onClick={() => moveToInvestmentScorePage(selectedStock.stockCode)}
                         onKeyDown={(event) => {
-                            if (!selectedStock) return;
-
                             if (event.key === "Enter" || event.key === " ") {
-                                navigate(`/market/${encodeURIComponent(selectedStock.stockCode)}/investment-score`);
+                                event.preventDefault();
+                                moveToInvestmentScorePage(selectedStock.stockCode);
                             }
                         }}
                     >
@@ -278,7 +281,11 @@ export default function StockSearchPage() {
 
                             <div className="selected-stock-card__score">
                                 <span>투자점수</span>
-                                <strong>{selectedStock.investmentScore}</strong>
+                                <strong>
+                                    {selectedStock.investmentScore > 0
+                                        ? selectedStock.investmentScore
+                                        : "-"}
+                                </strong>
                             </div>
                         </div>
 
@@ -307,12 +314,27 @@ export default function StockSearchPage() {
                                 <strong>{formatCurrency(selectedStock.previousClose)}</strong>
                             </div>
                             <div>
-                                <span>기준일</span>
+                                <span>가격 기준일</span>
                                 <strong>{selectedStock.baseDate ?? "-"}</strong>
                             </div>
                             <div>
                                 <span>평가</span>
                                 <strong>{selectedStock.scoreLabel}</strong>
+                            </div>
+                        </div>
+
+                        <div className="selected-stock-card__meta">
+                            <div>
+                                <span>점수 기준일</span>
+                                <strong>{selectedStock.investmentScoreBaseDate ?? "-"}</strong>
+                            </div>
+                            <div>
+                                <span>의견 코드</span>
+                                <strong>{selectedStock.opinion ?? "-"}</strong>
+                            </div>
+                            <div>
+                                <span>상세</span>
+                                <strong>리포트 보기</strong>
                             </div>
                         </div>
                     </section>
@@ -334,7 +356,7 @@ export default function StockSearchPage() {
                         stockList={stockList}
                         selectedStockId={selectedStock?.stockCode ?? null}
                         onSelectStock={(stock) => {
-                            navigate(`/market/${encodeURIComponent(String(stock.stockCode))}/investment-score`);
+                            moveToInvestmentScorePage(String(stock.stockCode));
                         }}
                     />
                 </section>
