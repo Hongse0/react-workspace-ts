@@ -18,15 +18,6 @@ type StockUiItem = StockItem & {
     baseDate: string | null;
 };
 
-type StockSearchItemWithPrice = StockSearchItem & {
-    clpr?: number | null;
-    vs?: number | null;
-    fltRt?: number | null;
-    currentPrice?: number | null;
-    diff?: number | null;
-    changeRate?: number | null;
-};
-
 function formatCurrency(value: number): string {
     if (!value) return "-";
     return `₩${Math.round(value).toLocaleString("ko-KR")}`;
@@ -50,11 +41,12 @@ function getStockColorClass(value: number): string {
     return "is-flat";
 }
 
-function calculateInvestmentScore(item: StockSearchItemWithPrice): number {
+function calculateInvestmentScore(item: StockSearchItem): number {
     const activeScore = item.activeYn === "Y" ? 35 : 20;
     const marketScore = item.mrktCtg === "KOSPI" ? 25 : item.mrktCtg === "KOSDAQ" ? 20 : 15;
 
-    const rate = Number(item.fltRt ?? item.changeRate ?? 0);
+    const rate = Number(item.fltRt ?? 0);
+
     const momentumScore =
         rate >= 5 ? 25 :
             rate >= 2 ? 20 :
@@ -75,28 +67,26 @@ function getScoreLabel(score: number): string {
 }
 
 export const toStockUiItem = (item: StockSearchItem): StockUiItem => {
-    const source = item as StockSearchItemWithPrice;
-
-    const currentPrice = Number(source.clpr ?? source.currentPrice ?? 0);
-    const previousChange = Number(source.vs ?? source.diff ?? 0);
-    const changeRate = Number(source.fltRt ?? source.changeRate ?? 0);
-    const investmentScore = calculateInvestmentScore(source);
+    const currentPrice = Number(item.currentPrice ?? 0);
+    const previousChange = Number(item.vs ?? 0);
+    const changeRate = Number(item.fltRt ?? 0);
+    const investmentScore = calculateInvestmentScore(item);
 
     return {
-        id: source.srtnCd,
-        stockName: source.itmsNm ?? "-",
-        stockCode: source.srtnCd ?? "-",
-        market: source.mrktCtg ?? "-",
-        companyName: source.corpNm ?? "-",
+        id: item.srtnCd,
+        stockName: item.itmsNm ?? "-",
+        stockCode: item.srtnCd ?? "-",
+        market: item.mrktCtg ?? "-",
+        companyName: item.corpNm ?? "-",
         price: currentPrice,
         previousChange,
         previousClose: currentPrice ? currentPrice - previousChange : 0,
         changeRate,
         investmentScore,
         scoreLabel: getScoreLabel(investmentScore),
-        baseDate: source.basDt ?? null,
-        tags: [source.mrktCtg ?? "국내주식"].filter(Boolean),
-        description: source.corpNm ?? "",
+        baseDate: item.basDt ?? null,
+        tags: [item.mrktCtg ?? "국내주식"].filter(Boolean),
+        description: item.corpNm ?? "",
     };
 };
 

@@ -19,6 +19,8 @@ export interface StockSearchItem {
     activeYn: string | null;
     basDt: string | null;
     currentPrice: number | null;
+    vs: number | null;
+    fltRt: number | null;
 }
 
 export interface StockSearchResult {
