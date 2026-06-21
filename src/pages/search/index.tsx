@@ -6,6 +6,7 @@ import SearchResultSection from "../../components/search/SearchResultSection.tsx
 import SearchHeaderSection from "../../components/search/SearchHeaderSection.tsx";
 import { useStockSearchQuery } from "../../services/search/useStockSearchQuery";
 import type { StockSearchItem } from "../../module/common/StockSearchService";
+import {useNavigate} from "react-router-dom";
 
 const TRENDING_KEYWORDS = ["삼성전자", "SK하이닉스", "ETF", "반도체", "2차전지"];
 const RECENT_KEYWORDS = ["NAVER", "카카오", "TIGER"];
@@ -196,6 +197,8 @@ export default function StockSearchPage() {
         submitSearch(value);
     };
 
+    const navigate = useNavigate();
+
     return (
         <Box className="stock-search-page">
             <Container maxWidth="sm" disableGutters className="stock-search-container">
@@ -246,7 +249,22 @@ export default function StockSearchPage() {
                 </section>
 
                 {selectedStock && (
-                    <section className="selected-stock-card">
+                    <section
+                        className="selected-stock-card"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                            if (!selectedStock) return;
+                            navigate(`/market/${encodeURIComponent(selectedStock.stockCode)}/investment-score`);
+                        }}
+                        onKeyDown={(event) => {
+                            if (!selectedStock) return;
+
+                            if (event.key === "Enter" || event.key === " ") {
+                                navigate(`/market/${encodeURIComponent(selectedStock.stockCode)}/investment-score`);
+                            }
+                        }}
+                    >
                         <div className="selected-stock-card__top">
                             <div className="selected-stock-card__title-box">
                                 <div className="selected-stock-card__name-row">
@@ -315,7 +333,9 @@ export default function StockSearchPage() {
                     <SearchResultSection
                         stockList={stockList}
                         selectedStockId={selectedStock?.stockCode ?? null}
-                        onSelectStock={(stock) => setSelectedStockCode(String(stock.stockCode))}
+                        onSelectStock={(stock) => {
+                            navigate(`/market/${encodeURIComponent(String(stock.stockCode))}/investment-score`);
+                        }}
                     />
                 </section>
             </Container>
