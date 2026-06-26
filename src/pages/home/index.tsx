@@ -44,9 +44,11 @@ export default function HomePage() {
 
     const {
         data: dashboard,
+        isLoading,
         isFetching,
         isError,
         error,
+        refetch,
     } = useDashboardHoldingsQuery();
 
     const topSummary = useMemo(() => {
@@ -67,7 +69,7 @@ export default function HomePage() {
         };
     }, [dashboard]);
 
-    if (isFetching) {
+    if (isLoading) {
         return <div className="home-page">로딩중</div>;
     }
 
@@ -89,7 +91,21 @@ export default function HomePage() {
                 <div className="hero-greeting">
                     안녕하세요, {nickname ?? "회원"}님
                 </div>
-                <div className="hero-title">내 투자 대시보드</div>
+                <div className="hero-title-row">
+                    <div className="hero-title">내 투자 대시보드</div>
+                    <button
+                        type="button"
+                        className="hero-refresh-btn"
+                        onClick={() => refetch()}
+                        disabled={isFetching}
+                        aria-label="주가 새로고침"
+                    >
+                        <span className={`hero-refresh-icon ${isFetching ? "is-spinning" : ""}`}>
+                            ↻
+                        </span>
+                        {isFetching ? "업데이트 중" : "새로고침"}
+                    </button>
+                </div>
 
                 <div className="hero-amount">
                     {formatCurrency(dashboard.summary.totalEvaluationAmount)}

@@ -34,12 +34,64 @@
     color: #6b7280;
 }
 
-.hero-title {
+.hero-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     margin-bottom: 18px;
+}
+
+.hero-title {
     font-size: 22px;
     font-weight: 800;
     letter-spacing: -0.04em;
     color: #111827;
+}
+
+.hero-refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.hero-refresh-btn:hover:not(:disabled) {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.hero-refresh-btn:disabled {
+    color: #9ca3af;
+    background: #f9fafb;
+    cursor: not-allowed;
+}
+
+.hero-refresh-icon {
+    display: inline-block;
+    font-size: 15px;
+    line-height: 1;
+}
+
+.hero-refresh-icon.is-spinning {
+    animation: hero-refresh-spin 0.8s linear infinite;
+}
+
+@keyframes hero-refresh-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .hero-amount {
