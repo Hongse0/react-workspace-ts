@@ -37,6 +37,16 @@ export default function AddAccountDialog({ open, onClose, onSuccess }: Props) {
             width: "100%",
             maxWidth: 560,
             mx: "auto",
+            "@media (min-width: 1024px)": {
+                position: "relative",
+                bottom: "auto",
+                left: "auto",
+                right: "auto",
+                borderRadius: "24px",
+                maxWidth: 480,
+                mx: "auto",
+                my: 4,
+            },
         }),
         []
     );

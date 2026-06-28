@@ -1,0 +1,134 @@
+.sidenav {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    width: var(--sidenav-width);
+    height: 100dvh;
+    padding: var(--space-6) var(--space-4);
+    background: var(--color-bg);
+    border-right: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    box-sizing: border-box;
+}
+
+.sidenav__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0 var(--space-3);
+}
+
+.sidenav__brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--color-primary);
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+}
+
+.sidenav__brand-name {
+    font-size: 17px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    color: var(--color-text-strong);
+}
+
+.sidenav__menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.sidenav__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    padding: 12px 14px;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    font-size: 15px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sidenav__item:hover {
+    background: var(--color-bg-subtle);
+    color: var(--color-text-strong);
+}
+
+.sidenav__item.is-active {
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+
+.sidenav__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+}
+
+.sidenav__icon .MuiSvgIcon-root {
+    font-size: 22px;
+}
+
+.sidenav__label {
+    flex: 1;
+}
+
+.sidenav__footer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-subtle);
+}
+
+.sidenav__user-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.sidenav__user-meta {
+    min-width: 0;
+}
+
+.sidenav__user-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--color-text-strong);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidenav__user-sub {
+    margin-top: 2px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--color-text-weak);
+}

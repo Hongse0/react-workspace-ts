@@ -267,3 +267,64 @@
         padding: 15px !important;
     }
 }
+
+/* =========================
+   Desktop (≥1024px) — Toss-style
+========================= */
+
+@media (min-width: 1024px) {
+    .settings-page {
+        overflow: visible;
+        background: var(--color-bg-page);
+    }
+
+    .settings-page__header {
+        max-width: var(--content-max);
+        margin: 0 auto;
+        padding: 40px 48px 20px;
+        background: transparent;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .settings-page__title {
+        font-size: 36px !important;
+    }
+
+    .settings-profile-card {
+        padding: 24px !important;
+        border-radius: var(--radius-2xl) !important;
+    }
+
+    .settings-page__body {
+        max-width: var(--content-max);
+        margin: 0 auto;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px 48px 64px;
+        overflow: visible;
+    }
+
+    .settings-page__body .MuiContainer-root,
+    .settings-page__header .MuiContainer-root {
+        max-width: none !important;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .settings-menu-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .settings-menu-item {
+        padding: 20px !important;
+        border-radius: var(--radius-lg) !important;
+    }
+
+    .settings-info-card {
+        padding: 20px !important;
+        border-radius: var(--radius-lg) !important;
+    }
+}

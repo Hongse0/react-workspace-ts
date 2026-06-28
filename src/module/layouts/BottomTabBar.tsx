@@ -45,6 +45,9 @@ const Dock = styled(Box)(({ theme }) => ({
     bottom: 0,
     zIndex: theme.zIndex.appBar + 1,
     paddingBottom: "env(safe-area-inset-bottom)",
+    "@media (min-width: 1024px)": {
+        display: "none",
+    },
 }));
 
 const Bar = styled(Paper)(() => ({
