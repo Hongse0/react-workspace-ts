@@ -4,12 +4,12 @@ import type { InvestmentOpinion } from "./StockSearchService";
 
 export type OpinionFilter = InvestmentOpinion | "ALL";
 
-export interface StockRankingRequest {
+export type StockRankingRequest = {
     opinion?: OpinionFilter;
     size?: number;
     page?: number;
     basDt?: string;
-}
+};
 
 export interface StockRankingItem {
     rank: number;
