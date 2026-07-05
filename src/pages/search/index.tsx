@@ -5,6 +5,7 @@ import type { StockItem } from "./types";
 import "./style.css";
 import SearchResultSection from "../../components/search/SearchResultSection.tsx";
 import SearchHeaderSection from "../../components/search/SearchHeaderSection.tsx";
+import MarketPreludePc from "./MarketPreludePc";
 import { useStockSearchQuery } from "../../services/search/useStockSearchQuery";
 import type {
     InvestmentOpinion,
@@ -339,6 +340,8 @@ export default function StockSearchPage() {
                         </div>
                     </section>
                 )}
+
+                {!hasSubmittedKeyword && <MarketPreludePc />}
 
                 <section className="stock-result-panel">
                     <div className="stock-result-panel__header">
