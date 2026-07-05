@@ -18,20 +18,15 @@
     align-items: center;
     gap: var(--space-3);
     padding: 0 var(--space-3);
+    margin-bottom: var(--space-4);
 }
 
 .sidenav__brand-mark {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     width: 32px;
     height: 32px;
     border-radius: 10px;
-    background: var(--color-primary);
-    color: #ffffff;
-    font-size: 16px;
-    font-weight: 900;
-    letter-spacing: -0.04em;
+    object-fit: cover;
+    display: block;
 }
 
 .sidenav__brand-name {
@@ -44,7 +39,7 @@
 .sidenav__menu {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
     flex: 1;
 }
 

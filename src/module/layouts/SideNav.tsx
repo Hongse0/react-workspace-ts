@@ -11,7 +11,11 @@ export default function SideNav() {
     return (
         <aside className="sidenav desktop-only">
             <div className="sidenav__brand">
-                <span className="sidenav__brand-mark">G</span>
+                <img
+                    src="/asset-flow-icon.png"
+                    alt="GrowFolio"
+                    className="sidenav__brand-mark"
+                />
                 <span className="sidenav__brand-name">GrowFolio</span>
             </div>
 
